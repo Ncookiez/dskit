@@ -2,6 +2,7 @@
   "name": "dskit-eth",
   "description": "",
   "version": "0.1.0",
+  "type": "module",
   "license": "MIT",
   "main": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
@@ -12,7 +13,8 @@
   "scripts": {
     "build": "tsup",
     "prepare": "pnpm build",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "test": "pnpm build && mocha"
   },
   "tsup": {
     "dts": true,
@@ -26,6 +28,7 @@
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^4.1.0",
     "@types/node": "^17.0.45",
+    "mocha": "^10.7.3",
     "prettier": "^2.8.4",
     "tslib": "^2.6.0",
     "tsup": "^6.6.3",
