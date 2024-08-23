@@ -17,7 +17,7 @@ export const getSwapRoute = async (publicClient: PublicClient, params: SwapParam
   const chainId = await publicClient.getChainId()
 
   const tokenIn = new Token(chainId, params.tokenIn.address, params.tokenIn.decimals)
-  const tokenOut = new Token(chainId, params.tokenIn.address, params.tokenIn.decimals)
+  const tokenOut = new Token(chainId, params.tokenOut.address, params.tokenOut.decimals)
 
   const possiblePoolRoutes: Pool[][] = []
 
