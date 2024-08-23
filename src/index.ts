@@ -1,3 +1,4 @@
+import * as swapModule from './modules/swap'
 import { createPublicClient, http, PublicClient } from 'viem'
 
 // TODO: support ethers or generic public clients as well
@@ -36,15 +37,13 @@ export class DSKit {
     return this.chainId
   }
 
-  swap = {
-    getSwapRoute: () => {}
-  }
+  swap = { ...swapModule }
 }
 
 /**
  * Modules
  */
-// TODO
+export * from './modules/swap'
 
 /**
  * Utils
