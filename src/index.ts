@@ -1,3 +1,4 @@
+import * as blockModule from './modules/block'
 import * as swapModule from './modules/swap'
 import { createPublicClient, http, PublicClient } from 'viem'
 
@@ -12,7 +13,7 @@ export class DSKit {
   rpcUrl: string | undefined
   chainId: number | undefined
 
-  contructor(params: DSKitParams) {
+  constructor(params: DSKitParams) {
     // TODO: simple validation
     if (!!params.viemPublicClient) {
       this.publicClient = params.viemPublicClient
@@ -38,6 +39,10 @@ export class DSKit {
   }
 
   swap = { ...swapModule }
+
+  block = {
+    nearTimestamp: async (args: blockModule.NearTimestampArgs) => blockModule.nearTimestamp(await this.getPublicClient(), args)
+  }
 }
 
 /**
