@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.local
+.env.dev.local
+.env.test.local
+.env.prod.local
+.DS_Store
