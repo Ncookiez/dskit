@@ -99,7 +99,11 @@ export const getZapTx = async (publicClient: PublicClient, args: ZapTxArgs) => {
     target: action.address,
     value: isDolphinAddress(tokenIn.address) && !swapTo ? tokenIn.amount : 0n,
     data: encodeFunctionData({ abi: action.abi, functionName: action.functionName, args: action.args }),
-    tokens: [!!swapTo ? { token: swapTo.address, index: action.injectedAmountIndex ?? -1 } : { token: tokenIn.address, index: -1 }]
+    tokens: [
+      !!swapTo
+        ? { token: swapTo.address, index: action.injectedAmountIndex ?? -1 }
+        : { token: isDolphinAddress(tokenIn.address) ? zeroAddress : tokenIn.address, index: -1 }
+    ]
   })
 
   const config: ZapConfig = {
