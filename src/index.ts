@@ -41,15 +41,16 @@ export class DSKit {
     }) as PublicClient
     return this.publicClient
   }
-  
+
   block = {
-    nearTimestamp: async (args: blockModule.NearTimestampArgs) => blockModule.nearTimestamp(await this.getPublicClient(), args)
+    nearTimestamp: async (args: blockModule.GetBlockNearTimestampArgs) =>
+      blockModule.getBlockNearTimestamp(await this.getPublicClient(), args)
   }
 
   price = {
-    ofToken: async (args: priceModule.OfTokenArgs) => priceModule.ofToken(await this.getPublicClient(), args)
+    ofToken: async (args: priceModule.GetTokenPriceArgs) => priceModule.getTokenPrice(await this.getPublicClient(), args)
   }
-  
+
   swap = {
     getSwapRoute: async (args: swapModule.SwapArgs) => swapModule.getSwapRoute(await this.getPublicClient(), args)
   }

@@ -2,7 +2,7 @@ import { getSwapRoute } from '../swap'
 import { dolphinAddress, weth } from 'src/constants'
 import { Address, formatUnits, PublicClient } from 'viem'
 
-export interface OfTokenArgs {
+export interface GetTokenPriceArgs {
   token: { address: Address; decimals: number }
   tokenDenominator?: { address: Address; decimals: number }
 }
@@ -18,7 +18,7 @@ export interface OfTokenArgs {
  * @dev If either token is specified as the `0xeee...eee` address, it will assume it is WETH and use the
  * WETH address for that network.
  */
-export async function ofToken(publicClient: PublicClient, { token, tokenDenominator }: OfTokenArgs) {
+export async function getTokenPrice(publicClient: PublicClient, { token, tokenDenominator }: GetTokenPriceArgs) {
   // Default the token denominator to WETH
   const chainId = publicClient.chain?.id ?? (await publicClient.getChainId())
   const networkWeth = weth[chainId]
