@@ -1,13 +1,15 @@
-import { SwapArgs } from '.'
+import { SwapArgs, SwapResult } from '.'
 import { uniPoolABI } from './abis/uniPoolABI'
 import { uniQuoterABI } from './abis/uniQuoterABI'
-import { uniswapV3Quoter } from './constants'
-import { CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
-import { FeeAmount, Pool, Route, SwapQuoter } from '@uniswap/v3-sdk'
+import { uniRouterABI } from './abis/uniRouterABI'
+import { uniswapV3Quoter, uniswapV3Router } from './constants'
+import { SwapRouter } from '@uniswap/router-sdk'
+import { CurrencyAmount, Percent, Token, TradeType } from '@uniswap/sdk-core'
+import { FeeAmount, Pool, Route, SwapQuoter, Trade } from '@uniswap/v3-sdk'
 import { usdc, weth } from 'src/constants'
-import { Address, decodeFunctionData, PublicClient, SimulateContractReturnType } from 'viem'
+import { Address, decodeFunctionData, Hash, PublicClient } from 'viem'
 
-export const getSwapRoute = async (publicClient: PublicClient, chainId: number, args: SwapArgs) => {
+export const getSwapRoute = async (publicClient: PublicClient, chainId: number, args: SwapArgs): Promise<SwapResult> => {
   const tokenIn = new Token(chainId, args.tokenIn.address, args.tokenIn.decimals)
   const tokenOut = new Token(chainId, args.tokenOut.address, args.tokenOut.decimals)
 
@@ -44,15 +46,14 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
   const routeQuotes: {
     pools: Pool[]
     route: Route<typeof tokenIn, typeof tokenOut>
-    request: SimulateContractReturnType<typeof uniQuoterABI>['request']
     quote: bigint
   }[] = []
 
   await Promise.all(
     possiblePoolRoutes.map(async (pools) => {
-      const { route, request, quote } = await getRouteQuote(publicClient, pools, tokenIn, args.tokenIn.amount, tokenOut)
+      const { route, quote } = await getRouteQuote(publicClient, pools, tokenIn, args.tokenIn.amount, tokenOut)
 
-      routeQuotes.push({ pools, route, request, quote })
+      routeQuotes.push({ pools, route, quote })
     })
   )
 
@@ -66,7 +67,37 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
     }
   })
 
-  return bestRoute
+  if (!!uniswapV3Router[chainId] && !!args.executionOptions) {
+    const trade = Trade.createUncheckedTrade({
+      route: bestRoute.route,
+      inputAmount: CurrencyAmount.fromRawAmount(tokenIn, args.tokenIn.amount.toString()),
+      outputAmount: CurrencyAmount.fromRawAmount(tokenOut, bestRoute.quote.toString()),
+      tradeType: TradeType.EXACT_INPUT
+    })
+
+    const callParams = SwapRouter.swapCallParameters([trade], {
+      recipient: args.executionOptions.recipient,
+      slippageTolerance: new Percent(args.executionOptions.slippage ?? 50, 10_000),
+      deadlineOrPreviousBlockhash: Math.floor(args.executionOptions.deadline ?? Date.now() / 1_000 + 1_800)
+    })
+
+    const decodedCallParams = decodeFunctionData({
+      abi: uniRouterABI,
+      data: callParams.calldata as Hash
+    })
+
+    return {
+      quote: bestRoute.quote,
+      request: {
+        address: uniswapV3Router[chainId],
+        abi: uniRouterABI,
+        functionName: decodedCallParams.functionName,
+        args: decodedCallParams.args
+      }
+    }
+  }
+
+  return { quote: bestRoute.quote }
 }
 
 const getPoolAddresses = (tokenIn: Token, tokenOut: Token) => {
@@ -149,7 +180,7 @@ const getRouteQuote = async (publicClient: PublicClient, uniPools: Pool[], token
     data: calldata as `0x${string}`
   })
 
-  const { request, result } = await publicClient.simulateContract({
+  const { result } = await publicClient.simulateContract({
     address: uniswapV3Quoter[tokenIn.chainId],
     abi: uniQuoterABI,
     // @ts-ignore
@@ -160,5 +191,5 @@ const getRouteQuote = async (publicClient: PublicClient, uniPools: Pool[], token
 
   const quote = (result?.[0] as bigint | undefined) ?? 0n
 
-  return { route, request, quote }
+  return { route, quote }
 }

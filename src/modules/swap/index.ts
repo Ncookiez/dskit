@@ -1,13 +1,18 @@
 import { getSwapRoute as getUniswapV3SwapRoute } from './uniswap_v3'
-import { Pool, Route } from '@uniswap/v3-sdk'
-import { Address, PublicClient } from 'viem'
+import { Address, ContractFunctionParameters, PublicClient } from 'viem'
 
 export interface SwapArgs {
   tokenIn: { address: Address; decimals: number; amount: bigint }
   tokenOut: { address: Address; decimals: number }
+  executionOptions?: { recipient: Address; slippage?: number; deadline?: number }
 }
 
-export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs) => {
+export interface SwapResult {
+  quote: bigint
+  request?: ContractFunctionParameters & { address: Address }
+}
+
+export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs): Promise<SwapResult> => {
   if (args.tokenIn.address.toLowerCase() === args.tokenOut.address.toLowerCase())
     throw new Error(`The "tokenIn" and "tokenOut" addresses cannot be the same.`)
 
@@ -17,5 +22,5 @@ export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs) =
 
   // TODO: implement velodrome/aerodrome/ramses swap routes
 
-  return uniswapV3SwapRoute
+  return { quote: uniswapV3SwapRoute.quote, request: uniswapV3SwapRoute.request }
 }

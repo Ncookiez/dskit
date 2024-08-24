@@ -7,3 +7,10 @@ export const uniswapV3Quoter: { [chainId: number]: Lowercase<Address> } = {
   [mainnet.id]: '0x61ffe014ba17989e743c5f6cb21bf9697530b21e',
   [optimism.id]: '0x61ffe014ba17989e743c5f6cb21bf9697530b21e'
 }
+
+export const uniswapV3Router: { [chainId: number]: Lowercase<Address> } = {
+  [arbitrum.id]: '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45',
+  [base.id]: '0x2626664c2603336e57b271c5c0b26f421741e481',
+  [mainnet.id]: '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45',
+  [optimism.id]: '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45'
+}
