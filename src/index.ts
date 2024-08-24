@@ -38,7 +38,9 @@ export class DSKit {
     return this.chainId
   }
 
-  swap = { ...swapModule }
+  swap = {
+    getSwapRoute: async (params: swapModule.SwapParams) => swapModule.getSwapRoute(await this.getPublicClient(), params)
+  }
 
   block = {
     nearTimestamp: async (args: blockModule.NearTimestampArgs) => blockModule.nearTimestamp(await this.getPublicClient(), args)
@@ -48,6 +50,7 @@ export class DSKit {
 /**
  * Modules
  */
+export * from './modules/block'
 export * from './modules/swap'
 
 /**
