@@ -3,17 +3,7 @@ import { zapRouterABI } from './abis/zapRouterABI'
 import { zapRouter, zapTokenManager } from './constants'
 import { weth } from 'src/constants'
 import { isDolphinAddress } from 'src/utils'
-import {
-  Abi,
-  Address,
-  ContractFunctionArgs,
-  ContractFunctionParameters,
-  encodeFunctionData,
-  Mutable,
-  parseUnits,
-  PublicClient,
-  zeroAddress
-} from 'viem'
+import { Address, ContractFunctionArgs, ContractFunctionParameters, encodeFunctionData, Mutable, PublicClient, zeroAddress } from 'viem'
 
 export interface ZapTxArgs {
   tokenIn: { address: Address; decimals: number; amount: bigint }
@@ -120,30 +110,19 @@ export const getZapTx = async (publicClient: PublicClient, args: ZapTxArgs) => {
     recipient: recipient ?? userAddress
   }
 
-  const gasEstimate = await publicClient.estimateContractGas({
+  const request = {
     address: zapRouter[chainId],
     abi: [zapRouterABI['15']],
     functionName: 'executeOrder',
     args: [config, route],
-    value: isDolphinAddress(tokenIn.address) ? tokenIn.amount : 0n,
-    account: userAddress
-  })
-
-  const { request } = await publicClient.simulateContract({
-    address: zapRouter[chainId],
-    abi: [zapRouterABI['15']],
-    functionName: 'executeOrder',
-    args: [config, route],
-    value: isDolphinAddress(tokenIn.address) ? tokenIn.amount : 0n,
-    account: userAddress,
-    gas: (gasEstimate * parseUnits('1.2', 18)) / 10n ** 18n
-  })
+    value: isDolphinAddress(tokenIn.address) ? tokenIn.amount : 0n
+  }
 
   const approval = !isDolphinAddress(tokenIn.address)
     ? { token: tokenIn.address, spender: zapTokenManager[chainId], amount: tokenIn.amount }
     : undefined
 
-  return { request, gasEstimate, config, route, approval }
+  return { route, config, request, approval }
 }
 
 export * from './constants'

@@ -34,10 +34,9 @@ describe('zap', function () {
       })
 
       assert(zapTx)
-      assert(zapTx.config)
-      assert(zapTx.gasEstimate)
-      assert(zapTx.request)
       assert(zapTx.route)
+      assert(zapTx.config)
+      assert(zapTx.request)
     })
   })
 })
