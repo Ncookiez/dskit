@@ -16,3 +16,5 @@ export const usdc: { [chainId: number]: { address: Lowercase<Address>; decimals:
   [optimism.id]: { address: '0x0b2c639c533813f4aa9d7837caf62653d097ff85', decimals: 6 },
   [scroll.id]: { address: '0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4', decimals: 6 }
 }
+
+export const dolphinAddress = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'

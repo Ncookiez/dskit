@@ -5,7 +5,7 @@ import { uniswapV3Quoter } from './constants'
 import { CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
 import { FeeAmount, Pool, Route, SwapQuoter } from '@uniswap/v3-sdk'
 import { usdc, weth } from 'src/constants'
-import { Address, decodeFunctionData, PublicClient } from 'viem'
+import { Address, decodeFunctionData, PublicClient, SimulateContractReturnType } from 'viem'
 
 export const getSwapRoute = async (publicClient: PublicClient, chainId: number, params: SwapParams) => {
   const tokenIn = new Token(chainId, params.tokenIn.address, params.tokenIn.decimals)
@@ -44,14 +44,15 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
   const routeQuotes: {
     pools: Pool[]
     route: Route<typeof tokenIn, typeof tokenOut>
+    request: SimulateContractReturnType<typeof uniQuoterABI>['request']
     quote: bigint
   }[] = []
 
   await Promise.all(
     possiblePoolRoutes.map(async (pools) => {
-      const { route, quote } = await getRouteQuote(publicClient, pools, tokenIn, params.tokenIn.amount, tokenOut)
+      const { route, request, quote } = await getRouteQuote(publicClient, pools, tokenIn, params.tokenIn.amount, tokenOut)
 
-      routeQuotes.push({ pools, route, quote })
+      routeQuotes.push({ pools, route, request, quote })
     })
   )
 
@@ -148,7 +149,7 @@ const getRouteQuote = async (publicClient: PublicClient, uniPools: Pool[], token
     data: calldata as `0x${string}`
   })
 
-  const quoteResult = await publicClient.simulateContract({
+  const { request, result } = await publicClient.simulateContract({
     address: uniswapV3Quoter[tokenIn.chainId],
     abi: uniQuoterABI,
     // @ts-ignore
@@ -157,7 +158,7 @@ const getRouteQuote = async (publicClient: PublicClient, uniPools: Pool[], token
     args
   })
 
-  const quote = (quoteResult.result?.[0] as bigint | undefined) ?? 0n
+  const quote = (result?.[0] as bigint | undefined) ?? 0n
 
-  return { route, quote }
+  return { route, request, quote }
 }
