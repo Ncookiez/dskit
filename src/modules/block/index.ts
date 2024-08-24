@@ -20,7 +20,7 @@ export interface NearTimestampArgs {
  * @param verbose verbose logs for block fetching info
  * @returns a Block object close to the target timestamp
  */
-export async function nearTimestamp(
+export async function getBlockNearTimestamp(
   publicClient: PublicClient,
   { targetTimestamp, targetRangeSeconds = 60, verbose = false }: NearTimestampArgs
 ) {
