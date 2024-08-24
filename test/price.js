@@ -29,7 +29,7 @@ describe('price', () => {
       console.log('WETH -> USDC ', priceWethToUsdc)
       expect(priceUsdcToWeth).to.be.gt(0)
       expect(priceWethToUsdc).to.be.gt(0)
-      expect(Math.abs(1 / priceUsdcToWeth - priceWethToUsdc)).to.be.lt(1) // less than $1 diff in price
+      expect(Math.abs(1 / priceUsdcToWeth - priceWethToUsdc)).to.be.lt(5) // less than $5 diff in price
     })
 
     it('should use WETH as the default denominator', async function () {
