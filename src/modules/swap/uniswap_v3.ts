@@ -1,9 +1,10 @@
 import { SwapParams } from '.'
 import { uniPoolABI } from './abis/uniPoolABI'
 import { uniQuoterABI } from './abis/uniQuoterABI'
-import { uniswapV3Quoter, usdc, weth } from './constants'
+import { uniswapV3Quoter } from './constants'
 import { CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
 import { FeeAmount, Pool, Route, SwapQuoter } from '@uniswap/v3-sdk'
+import { usdc, weth } from 'src/constants'
 import { Address, decodeFunctionData, PublicClient } from 'viem'
 
 export const getSwapRoute = async (publicClient: PublicClient, chainId: number, params: SwapParams) => {
