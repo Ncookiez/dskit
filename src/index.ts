@@ -1,6 +1,8 @@
 import * as blockModule from './modules/block'
+import * as priceModule from './modules/price'
 import * as swapModule from './modules/swap'
 import { createPublicClient, http, PublicClient } from 'viem'
+import * as chains from 'viem/chains'
 
 // TODO: support ethers or generic public clients as well
 export type DSKitParams = { rpcUrl?: string; viemPublicClient?: PublicClient }
@@ -11,7 +13,6 @@ export type DSKitParams = { rpcUrl?: string; viemPublicClient?: PublicClient }
 export class DSKit {
   publicClient: PublicClient | undefined
   rpcUrl: string | undefined
-  chainId: number | undefined
 
   constructor(params: DSKitParams) {
     // TODO: simple validation
@@ -26,19 +27,26 @@ export class DSKit {
 
   async getPublicClient() {
     if (!!this.publicClient) return this.publicClient
-
-    this.publicClient = createPublicClient({ transport: http(this.rpcUrl) })
+    const unknownClient = createPublicClient({ transport: http(this.rpcUrl) })
+    const chainId = await unknownClient.getChainId()
+    const chainMap = Object.fromEntries(
+      (Object.entries(chains) as [string, any][]).filter(([_, obj]) => obj && obj.id).map(([_, chain]) => [chain.id, chain]) as any
+    )
+    this.publicClient = createPublicClient({
+      batch: {
+        multicall: true
+      },
+      chain: chainMap[chainId],
+      transport: http(this.rpcUrl)
+    }) as PublicClient
     return this.publicClient
   }
 
-  async getChainId() {
-    if (!!this.chainId) return this.chainId
-
-    this.chainId = await (await this.getPublicClient()).getChainId()
-    return this.chainId
-  }
-
   swap = { ...swapModule }
+
+  price = {
+    ofToken: async (args: priceModule.OfTokenArgs) => priceModule.ofToken(await this.getPublicClient(), args)
+  }
 
   block = {
     nearTimestamp: async (args: blockModule.NearTimestampArgs) => blockModule.nearTimestamp(await this.getPublicClient(), args)
