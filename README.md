@@ -190,4 +190,6 @@ This increases a dapp's resilience to third party service updates and failures, 
 
 Check DSKit in action on the [DSKit Demo Site](https://demo.dskit.eth.limo/)!
 
-![alt text](./assets/demo_site.png)
+The demo site repository can be found here: https://github.com/Ncookiez/dskit-demo
+
+![DSKit demo site with wallet management, block tools, and more](./assets/demo_site.png)
