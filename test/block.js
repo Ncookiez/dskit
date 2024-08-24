@@ -2,7 +2,7 @@ import { DSKit } from '../dist/index.js'
 import assert from 'assert'
 import { describe, it } from 'mocha'
 
-const dskit = new DSKit({ rpcUrl: process.env.ETH_RPC_URL })
+const dskit = new DSKit({ rpcUrl: process.env.ETHEREUM_RPC_URL })
 
 describe('block', () => {
   describe('nearTimestamp', () => {
