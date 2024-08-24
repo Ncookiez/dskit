@@ -1,6 +1,6 @@
 import { PublicClient } from 'viem'
 
-export interface NearTimestampArgs {
+export interface GetBlockNearTimestampArgs {
   targetTimestamp: bigint | number
   targetRangeSeconds: number
   verbose?: boolean
@@ -22,7 +22,7 @@ export interface NearTimestampArgs {
  */
 export async function getBlockNearTimestamp(
   publicClient: PublicClient,
-  { targetTimestamp, targetRangeSeconds = 60, verbose = false }: NearTimestampArgs
+  { targetTimestamp, targetRangeSeconds = 60, verbose = false }: GetBlockNearTimestampArgs
 ) {
   const targetTimestampAsBigInt = typeof targetTimestamp === 'number' ? BigInt(targetTimestamp) : targetTimestamp
 

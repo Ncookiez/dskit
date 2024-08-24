@@ -1,7 +1,8 @@
 import { getSwapRoute } from '../swap'
+import { dolphinAddress, weth } from 'src/constants'
 import { Address, formatUnits, PublicClient } from 'viem'
 
-export interface OfTokenArgs {
+export interface GetTokenPriceArgs {
   token: { address: Address; decimals: number }
   tokenDenominator?: { address: Address; decimals: number }
 }
@@ -10,17 +11,45 @@ export interface OfTokenArgs {
  * Fetches the current exchange rate between two tokens using onchain market swap rates.
  * @param publicClient The public client to use for fetching onchain data
  * @param token The token to fetch the price for
- * @param tokenDenominator The token to denominate the price in (default: USDC)
+ * @param tokenDenominator The token to denominate the price in (default: WETH)
  * For example, if the `token` is WETH and the `tokenDenominator` is USDC, this function will return how
  * much 1 WETH is worth in USDC in decimal format (ex: 2750.86758482101).
+ *
+ * @dev If either token is specified as the `0xeee...eee` address, it will assume it is WETH and use the
+ * WETH address for that network.
  */
-export async function ofToken(publicClient: PublicClient, { token, tokenDenominator }: OfTokenArgs) {
-  // Default the token denominator to USDC
+export async function getTokenPrice(publicClient: PublicClient, { token, tokenDenominator }: GetTokenPriceArgs) {
+  // Default the token denominator to WETH
+  const chainId = publicClient.chain?.id ?? (await publicClient.getChainId())
+  const networkWeth = weth[chainId]
   if (!tokenDenominator) {
-    tokenDenominator = {
-      address: '0x', // TODO: replace with USDC address per chain
-      decimals: 6
+    tokenDenominator = networkWeth
+  }
+
+  // Replace native token address with WETH
+  if (BigInt(token.address) == BigInt(dolphinAddress)) {
+    token.address = networkWeth.address
+  }
+  if (BigInt(tokenDenominator.address) == BigInt(dolphinAddress)) {
+    tokenDenominator.address = networkWeth.address
+  }
+
+  // If either of the tokens is undefined, the client is likely on a network that does not have a WETH address
+  if (!token || !tokenDenominator) {
+    if (!networkWeth) {
+      throw new Error(
+        `The client network (chainId: ${chainId} [0x${chainId.toString(
+          16
+        )}]) does not have a WETH token configured or is attempting to resolve a wrapped native token for pricing. You may need to specify the ERC20 token info for both the token and tokenDenominator on this network.`
+      )
+    } else {
+      throw new Error('Missing token or token denominator info in pricing call.')
     }
+  }
+
+  // Check if token is the same as denominator
+  if (BigInt(token.address) == BigInt(tokenDenominator.address)) {
+    return 1.0
   }
 
   // Get the swap quote for token -> tokenDenominator for some small amount (10 ^ decimals)

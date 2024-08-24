@@ -46,11 +46,12 @@ export class DSKit {
   }
 
   block = {
-    nearTimestamp: async (args: blockModule.NearTimestampArgs) => blockModule.getBlockNearTimestamp(await this.getPublicClient(), args)
+    nearTimestamp: async (args: blockModule.GetBlockNearTimestampArgs) =>
+      blockModule.getBlockNearTimestamp(await this.getPublicClient(), args)
   }
 
   price = {
-    ofToken: async (args: priceModule.OfTokenArgs) => priceModule.ofToken(await this.getPublicClient(), args)
+    ofToken: async (args: priceModule.GetTokenPriceArgs) => priceModule.getTokenPrice(await this.getPublicClient(), args)
   }
 
   swap = {
