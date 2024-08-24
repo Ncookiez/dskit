@@ -1,4 +1,4 @@
-import { SwapParams } from '.'
+import { SwapArgs } from '.'
 import { uniPoolABI } from './abis/uniPoolABI'
 import { uniQuoterABI } from './abis/uniQuoterABI'
 import { uniswapV3Quoter } from './constants'
@@ -7,9 +7,9 @@ import { FeeAmount, Pool, Route, SwapQuoter } from '@uniswap/v3-sdk'
 import { usdc, weth } from 'src/constants'
 import { Address, decodeFunctionData, PublicClient, SimulateContractReturnType } from 'viem'
 
-export const getSwapRoute = async (publicClient: PublicClient, chainId: number, params: SwapParams) => {
-  const tokenIn = new Token(chainId, params.tokenIn.address, params.tokenIn.decimals)
-  const tokenOut = new Token(chainId, params.tokenOut.address, params.tokenOut.decimals)
+export const getSwapRoute = async (publicClient: PublicClient, chainId: number, args: SwapArgs) => {
+  const tokenIn = new Token(chainId, args.tokenIn.address, args.tokenIn.decimals)
+  const tokenOut = new Token(chainId, args.tokenOut.address, args.tokenOut.decimals)
 
   const possiblePoolRoutes: Pool[][] = []
 
@@ -50,7 +50,7 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
 
   await Promise.all(
     possiblePoolRoutes.map(async (pools) => {
-      const { route, request, quote } = await getRouteQuote(publicClient, pools, tokenIn, params.tokenIn.amount, tokenOut)
+      const { route, request, quote } = await getRouteQuote(publicClient, pools, tokenIn, args.tokenIn.amount, tokenOut)
 
       routeQuotes.push({ pools, route, request, quote })
     })

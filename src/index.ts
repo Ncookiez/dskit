@@ -3,7 +3,7 @@ import * as swapModule from './modules/swap'
 import { createPublicClient, http, PublicClient } from 'viem'
 
 // TODO: support ethers or generic public clients as well
-export type DSKitParams = { rpcUrl?: string; viemPublicClient?: PublicClient }
+export type DSKitArgs = { rpcUrl?: string; viemPublicClient?: PublicClient }
 
 /**
  * DSKit Class
@@ -13,12 +13,12 @@ export class DSKit {
   rpcUrl: string | undefined
   chainId: number | undefined
 
-  constructor(params: DSKitParams) {
+  constructor(args: DSKitArgs) {
     // TODO: simple validation
-    if (!!params.viemPublicClient) {
-      this.publicClient = params.viemPublicClient
-    } else if (!!params.rpcUrl) {
-      this.rpcUrl = params.rpcUrl
+    if (!!args.viemPublicClient) {
+      this.publicClient = args.viemPublicClient
+    } else if (!!args.rpcUrl) {
+      this.rpcUrl = args.rpcUrl
     } else {
       throw new Error('Please include either an "rpcUrl" or "viemPublicClient" when initializing DSKit.')
     }
@@ -39,7 +39,7 @@ export class DSKit {
   }
 
   swap = {
-    getSwapRoute: async (params: swapModule.SwapParams) => swapModule.getSwapRoute(await this.getPublicClient(), params)
+    getSwapRoute: async (args: swapModule.SwapArgs) => swapModule.getSwapRoute(await this.getPublicClient(), args)
   }
 
   block = {
