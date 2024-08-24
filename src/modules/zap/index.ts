@@ -19,7 +19,7 @@ export interface ZapTxArgs {
   tokenIn: { address: Address; decimals: number; amount: bigint }
   swapTo?: { address: Address; decimals: number }
   action: ContractFunctionParameters & { injectedAmountIndex?: number }
-  tokenOut?: { address: Address; decimals: number; minAmount: bigint }
+  tokenOut?: { address: Address; minAmount: bigint }
   userAddress: Address
   recipient?: Address
 }
@@ -84,13 +84,19 @@ export const getZapTx = async (publicClient: PublicClient, args: ZapTxArgs) => {
     if (swapTo.address.toLowerCase() !== weth[chainId].address) {
       const swapTokenIn = isDolphinAddress(tokenIn.address) ? { ...weth[chainId], amount: tokenIn.amount } : tokenIn
 
-      const swapRoute = await getSwapRoute(publicClient, { tokenIn: swapTokenIn, tokenOut: swapTo })
+      const swapRoute = await getSwapRoute(publicClient, {
+        tokenIn: swapTokenIn,
+        tokenOut: swapTo,
+        executionOptions: { recipient: zapRouter[chainId] }
+      })
+
+      if (!swapRoute.request) throw new Error('No execution context for swap route found.')
 
       route.push({
         target: swapRoute.request.address,
-        value: swapRoute.request.value ?? 0n,
+        value: 0n,
         data: encodeFunctionData({
-          abi: swapRoute.request.abi as Abi,
+          abi: swapRoute.request.abi,
           functionName: swapRoute.request.functionName,
           args: swapRoute.request.args
         }),
@@ -139,3 +145,5 @@ export const getZapTx = async (publicClient: PublicClient, args: ZapTxArgs) => {
 
   return { request, gasEstimate, config, route, approval }
 }
+
+export * from './constants'

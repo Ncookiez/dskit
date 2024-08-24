@@ -36,8 +36,9 @@
   },
   "packageManager": "pnpm@8.12.1",
   "dependencies": {
-    "@uniswap/sdk-core": "^5.3.1",
-    "@uniswap/v3-sdk": "^3.13.1",
+    "@uniswap/router-sdk": "1.9.0",
+    "@uniswap/sdk-core": "4.2.0",
+    "@uniswap/v3-sdk": "3.11.0",
     "viem": "2.20.0"
   }
 }
