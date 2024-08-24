@@ -1,6 +1,6 @@
 {
   "name": "dskit-eth",
-  "description": "",
+  "description": "A lightweight \"Dapp Survival Kit\" to help applications deliver fully functional experiences without sacrificing decentralization, security or privacy.",
   "version": "0.1.0",
   "type": "module",
   "license": "MIT",
