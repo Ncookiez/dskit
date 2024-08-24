@@ -5,7 +5,7 @@ import { createPublicClient, http, PublicClient } from 'viem'
 import * as chains from 'viem/chains'
 
 // TODO: support ethers or generic public clients as well
-export type DSKitParams = { rpcUrl?: string; viemPublicClient?: PublicClient }
+export type DSKitArgs = { rpcUrl?: string; viemPublicClient?: PublicClient }
 
 /**
  * DSKit Class
@@ -14,12 +14,12 @@ export class DSKit {
   publicClient: PublicClient | undefined
   rpcUrl: string | undefined
 
-  constructor(params: DSKitParams) {
+  constructor(args: DSKitArgs) {
     // TODO: simple validation
-    if (!!params.viemPublicClient) {
-      this.publicClient = params.viemPublicClient
-    } else if (!!params.rpcUrl) {
-      this.rpcUrl = params.rpcUrl
+    if (!!args.viemPublicClient) {
+      this.publicClient = args.viemPublicClient
+    } else if (!!args.rpcUrl) {
+      this.rpcUrl = args.rpcUrl
     } else {
       throw new Error('Please include either an "rpcUrl" or "viemPublicClient" when initializing DSKit.')
     }
@@ -41,21 +41,24 @@ export class DSKit {
     }) as PublicClient
     return this.publicClient
   }
-
-  swap = { ...swapModule }
+  
+  block = {
+    nearTimestamp: async (args: blockModule.NearTimestampArgs) => blockModule.nearTimestamp(await this.getPublicClient(), args)
+  }
 
   price = {
     ofToken: async (args: priceModule.OfTokenArgs) => priceModule.ofToken(await this.getPublicClient(), args)
   }
-
-  block = {
-    nearTimestamp: async (args: blockModule.NearTimestampArgs) => blockModule.nearTimestamp(await this.getPublicClient(), args)
+  
+  swap = {
+    getSwapRoute: async (args: swapModule.SwapArgs) => swapModule.getSwapRoute(await this.getPublicClient(), args)
   }
 }
 
 /**
  * Modules
  */
+export * from './modules/block'
 export * from './modules/swap'
 
 /**
