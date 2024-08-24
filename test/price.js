@@ -28,7 +28,7 @@ describe('price', () => {
       console.log('WETH -> USDC ', priceWethToUsdc)
       assert(priceUsdcToWeth > 0)
       assert(priceWethToUsdc > 0)
-      assert(Math.abs(1 / priceUsdcToWeth - priceWethToUsdc) < 10) // less than $1 diff in price
+      assert(Math.abs(1 / priceUsdcToWeth - priceWethToUsdc) < 1) // less than $1 diff in price
     })
   })
 })
