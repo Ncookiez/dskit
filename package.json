@@ -1,7 +1,7 @@
 {
   "name": "dskit-eth",
   "description": "A lightweight \"Dapp Survival Kit\" to help applications deliver fully functional experiences without sacrificing decentralization, security or privacy",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "type": "module",
   "license": "MIT",
   "main": "./dist/index.js",
@@ -26,7 +26,6 @@
     ]
   },
   "dependencies": {
-    "@uniswap/router-sdk": "1.9.0",
     "@uniswap/sdk-core": "4.2.0",
     "@uniswap/v3-sdk": "3.11.0",
     "viem": "2.20.0"

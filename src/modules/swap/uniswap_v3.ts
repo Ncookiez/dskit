@@ -3,9 +3,8 @@ import { uniPoolABI } from './abis/uniPoolABI'
 import { uniQuoterABI } from './abis/uniQuoterABI'
 import { uniRouterABI } from './abis/uniRouterABI'
 import { uniswapV3FactoryOverrides, uniswapV3Quoter, uniswapV3Router } from './constants'
-import { SwapRouter } from '@uniswap/router-sdk'
-import { CurrencyAmount, Percent, Token, TradeType } from '@uniswap/sdk-core'
-import { FeeAmount, Pool, Route, SwapQuoter, Trade } from '@uniswap/v3-sdk'
+import { CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
+import { encodeRouteToPath, FeeAmount, Pool, Route, SwapQuoter } from '@uniswap/v3-sdk'
 import { usdc, weth } from 'src/constants'
 import { Address, decodeFunctionData, Hash, PublicClient } from 'viem'
 
@@ -68,31 +67,20 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
   })
 
   if (!!uniswapV3Router[chainId] && !!args.executionOptions) {
-    const trade = Trade.createUncheckedTrade({
-      route: bestRoute.route,
-      inputAmount: CurrencyAmount.fromRawAmount(tokenIn, args.tokenIn.amount.toString()),
-      outputAmount: CurrencyAmount.fromRawAmount(tokenOut, bestRoute.quote.toString()),
-      tradeType: TradeType.EXACT_INPUT
-    })
-
-    const callParams = SwapRouter.swapCallParameters([trade], {
-      recipient: args.executionOptions.recipient,
-      slippageTolerance: new Percent(args.executionOptions.slippage ?? 50, 10_000),
-      deadlineOrPreviousBlockhash: Math.floor(args.executionOptions.deadline ?? Date.now() / 1_000 + 1_800)
-    })
-
-    const decodedCallParams = decodeFunctionData({
-      abi: uniRouterABI,
-      data: callParams.calldata as Hash
-    })
-
     return {
       quote: bestRoute.quote,
       request: {
         address: uniswapV3Router[chainId],
         abi: uniRouterABI,
-        functionName: decodedCallParams.functionName,
-        args: decodedCallParams.args
+        functionName: 'exactInput',
+        args: [
+          {
+            path: encodeRouteToPath(bestRoute.route, false) as Hash,
+            recipient: args.executionOptions.recipient,
+            amountIn: args.tokenIn.amount,
+            amountOutMinimum: 1n // TODO: use given slippage to calculate amountOutMin
+          }
+        ]
       }
     }
   }
