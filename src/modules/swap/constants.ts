@@ -14,3 +14,7 @@ export const uniswapV3Router: { [chainId: number]: Lowercase<Address> } = {
   [mainnet.id]: '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45',
   [optimism.id]: '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45'
 }
+
+export const uniswapV3FactoryOverrides: { [chainId: number]: Lowercase<Address> } = {
+  [base.id]: '0x33128a8fc17869897dce68ed026d694621f6fdfd'
+}

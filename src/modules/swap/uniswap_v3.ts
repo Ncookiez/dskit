@@ -2,7 +2,7 @@ import { SwapArgs, SwapResult } from '.'
 import { uniPoolABI } from './abis/uniPoolABI'
 import { uniQuoterABI } from './abis/uniQuoterABI'
 import { uniRouterABI } from './abis/uniRouterABI'
-import { uniswapV3Quoter, uniswapV3Router } from './constants'
+import { uniswapV3FactoryOverrides, uniswapV3Quoter, uniswapV3Router } from './constants'
 import { SwapRouter } from '@uniswap/router-sdk'
 import { CurrencyAmount, Percent, Token, TradeType } from '@uniswap/sdk-core'
 import { FeeAmount, Pool, Route, SwapQuoter, Trade } from '@uniswap/v3-sdk'
@@ -105,7 +105,7 @@ const getPoolAddresses = (tokenIn: Token, tokenOut: Token) => {
 
   Object.values(FeeAmount).forEach((fee) => {
     if (typeof fee === 'number') {
-      const address = Pool.getAddress(tokenIn, tokenOut, fee) as Address
+      const address = Pool.getAddress(tokenIn, tokenOut, fee, undefined, uniswapV3FactoryOverrides[tokenIn.chainId]) as Address
       poolAddresses.push({ address, fee })
     }
   })
