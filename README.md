@@ -16,6 +16,7 @@ _A lightweight **"Dapp Survival Kit"** to help applications deliver fully functi
   - [More](#more-to-come)
 - [Why DSKit?](#why-dskit)
 - [Bringing the "D" back to "Dapp"](#bringing-the-d-back-to-dapp)
+- [Demo Site](#demo-site)
 
 ---
 
@@ -182,3 +183,11 @@ const blockNumber = block.number
 DSKit offers functionality previously only easily accessible through third party services and APIs, but through a single data access point: an RPC. This includes features like finding swap routes, arbitrary zap routes such as zapping into ERC4626 vaults, finding token prices, fetching block data given a specific timestamp, event and transaction indexing, and more.
 
 This increases a dapp's resilience to third party service updates and failures, and assures the user of the privacy of their data. Furthermore, a dapp can easily utilize a network connection specified by the user (ideally linked to their own locally hosted node), at which point the user has a standalone application where all onchain data is being accessed through a source they trust. In such a dapp, a user can have complete confidence that the only data they are publishing is the data they sign onchain.
+
+---
+
+## Demo Site
+
+Check DSKit in action on the [DSKit Demo Site](https://demo.dskit.eth.limo/)!
+
+![alt text](./assets/demo_site.png)
