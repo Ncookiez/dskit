@@ -1,4 +1,5 @@
-# ![DSKit](./assets/logo_256.png)
+<span id="header"></span>
+![DSKit](./assets/logo_256.png)
 
 _A lightweight **"Dapp Survival Kit"** to help applications deliver fully functional experiences **without** sacrificing decentralization, security or privacy_
 
