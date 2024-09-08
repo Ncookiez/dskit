@@ -8,5 +8,6 @@
   "trailingComma": "none",
   "importOrderSortSpecifiers": true,
   "importOrderCaseInsensitive": true,
-  "plugins": ["@trivago/prettier-plugin-sort-imports"]
+  "plugins": ["@trivago/prettier-plugin-sort-imports"],
+  "overrides": [{ "files": "*.svg", "options": { "parser": "html" } }]
 }

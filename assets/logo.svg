@@ -2,66 +2,145 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="184.43771mm"
-   height="68.935707mm"
-   viewBox="0 0 184.43771 68.935707"
-   version="1.1"
-   id="svg5"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg">
-  <defs
-     id="defs2" />
-  <g
-     id="layer3" />
-  <g
-     id="layer1"
-     transform="translate(-13.513327,-36.674426)">
-    <g
-       id="g17605"
-       transform="translate(37.009931,-0.15589627)">
+  width="184.43771mm"
+  height="68.935707mm"
+  viewBox="0 0 184.43771 68.935707"
+  version="1.1"
+  id="svg5"
+  xmlns="http://www.w3.org/2000/svg"
+  xmlns:svg="http://www.w3.org/2000/svg"
+>
+  <defs id="defs2" />
+  <g id="layer3" />
+  <g id="layer1" transform="translate(-13.513327,-36.674426)">
+    <g id="g17605" transform="translate(37.009931,-0.15589627)">
       <rect
-         style="fill:#00bce6;fill-opacity:1;stroke:#00bce6;stroke-width:2.12109;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         id="rect866"
-         width="27.159834"
-         height="27.159834"
-         x="0.24575011"
-         y="83.758507"
-         transform="matrix(0.52069967,-0.85373992,0.52069967,0.85373992,0,0)" />
+        style="
+          fill: #00bce6;
+          fill-opacity: 1;
+          stroke: #00bce6;
+          stroke-width: 2.12109;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          stroke-miterlimit: 4;
+          stroke-dasharray: none;
+          stroke-opacity: 1;
+          paint-order: stroke fill markers;
+        "
+        id="rect866"
+        width="27.159834"
+        height="27.159834"
+        x="0.24575011"
+        y="83.758507"
+        transform="matrix(0.52069967,-0.85373992,0.52069967,0.85373992,0,0)"
+      />
       <rect
-         style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         id="rect4322"
-         width="4.6335068"
-         height="13.877887"
-         x="55.566353"
-         y="64.35923" />
+        style="
+          fill: #ffffff;
+          fill-opacity: 1;
+          stroke: #ffffff;
+          stroke-width: 1;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          stroke-miterlimit: 4;
+          stroke-dasharray: none;
+          stroke-opacity: 1;
+          paint-order: stroke fill markers;
+        "
+        id="rect4322"
+        width="4.6335068"
+        height="13.877887"
+        x="55.566353"
+        y="64.35923"
+      />
       <rect
-         style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;paint-order:stroke fill markers"
-         id="rect4740"
-         width="4.6335068"
-         height="13.877887"
-         x="68.981422"
-         y="-64.822044"
-         transform="rotate(90)" />
+        style="
+          fill: #ffffff;
+          fill-opacity: 1;
+          stroke: #ffffff;
+          stroke-width: 1;
+          stroke-linecap: round;
+          stroke-linejoin: round;
+          stroke-miterlimit: 4;
+          stroke-dasharray: none;
+          stroke-opacity: 1;
+          paint-order: stroke fill markers;
+        "
+        id="rect4740"
+        width="4.6335068"
+        height="13.877887"
+        x="68.981422"
+        y="-64.822044"
+        transform="rotate(90)"
+      />
     </g>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:40.5775px;line-height:1.25;font-family:'Ubuntu Mono';-inkscape-font-specification:'Ubuntu Mono Bold';stroke-width:1.90207"
-       x="31.322142"
-       y="84.338699"
-       id="text8140"><tspan
-         id="tspan8138"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Ubuntu Mono';-inkscape-font-specification:'Ubuntu Mono Bold';stroke-width:1.90207"
-         x="31.322142"
-         y="84.338699">DS</tspan></text>
+      xml:space="preserve"
+      style="
+        font-style: normal;
+        font-variant: normal;
+        font-weight: bold;
+        font-stretch: normal;
+        font-size: 40.5775px;
+        line-height: 1.25;
+        font-family: 'Ubuntu Mono';
+        -inkscape-font-specification: 'Ubuntu Mono Bold';
+        stroke-width: 1.90207;
+      "
+      x="31.322142"
+      y="84.338699"
+      id="text8140"
+    >
+      <tspan
+        id="tspan8138"
+        style="
+          font-style: normal;
+          font-variant: normal;
+          font-weight: bold;
+          font-stretch: normal;
+          font-family: 'Ubuntu Mono';
+          -inkscape-font-specification: 'Ubuntu Mono Bold';
+          stroke-width: 1.90207;
+        "
+        x="31.322142"
+        y="84.338699"
+      >
+        DS
+      </tspan>
+    </text>
     <text
-       xml:space="preserve"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:40.5775px;line-height:1.25;font-family:'Ubuntu Mono';-inkscape-font-specification:'Ubuntu Mono Bold';stroke-width:1.90207"
-       x="118.22112"
-       y="84.300095"
-       id="text15968"><tspan
-         id="tspan15966"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Ubuntu Mono';-inkscape-font-specification:'Ubuntu Mono Bold';stroke-width:1.90207"
-         x="118.22112"
-         y="84.300095">Kit</tspan></text>
+      xml:space="preserve"
+      style="
+        font-style: normal;
+        font-variant: normal;
+        font-weight: bold;
+        font-stretch: normal;
+        font-size: 40.5775px;
+        line-height: 1.25;
+        font-family: 'Ubuntu Mono';
+        -inkscape-font-specification: 'Ubuntu Mono Bold';
+        stroke-width: 1.90207;
+      "
+      x="118.22112"
+      y="84.300095"
+      id="text15968"
+    >
+      <tspan
+        id="tspan15966"
+        style="
+          font-style: normal;
+          font-variant: normal;
+          font-weight: bold;
+          font-stretch: normal;
+          font-family: 'Ubuntu Mono';
+          -inkscape-font-specification: 'Ubuntu Mono Bold';
+          stroke-width: 1.90207;
+        "
+        x="118.22112"
+        y="84.300095"
+      >
+        Kit
+      </tspan>
+    </text>
   </g>
 </svg>
