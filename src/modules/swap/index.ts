@@ -1,3 +1,4 @@
+import { getSwapRoute as getUniswapV2SwapRoute } from './uniswap_v2'
 import { getSwapRoute as getUniswapV3SwapRoute } from './uniswap_v3'
 import { Address, ContractFunctionParameters, PublicClient } from 'viem'
 
@@ -12,6 +13,7 @@ export interface SwapResult {
   request?: ContractFunctionParameters & { address: Address }
 }
 
+// TODO: enable opting in or out of any given dex
 export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs): Promise<SwapResult> => {
   if (args.tokenIn.address.toLowerCase() === args.tokenOut.address.toLowerCase())
     throw new Error(`The "tokenIn" and "tokenOut" addresses cannot be the same.`)
@@ -19,6 +21,15 @@ export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs): 
   const chainId = await publicClient.getChainId()
 
   const uniswapV3SwapRoute = await getUniswapV3SwapRoute(publicClient, chainId, args)
+
+  const swapRoute = { quote: uniswapV3SwapRoute.quote, request: uniswapV3SwapRoute.request }
+
+  const uniswapV2SwapRoute = await getUniswapV2SwapRoute(publicClient, chainId, args)
+
+  if (uniswapV2SwapRoute.quote > swapRoute.quote) {
+    swapRoute.quote = uniswapV2SwapRoute.quote
+    swapRoute.request = uniswapV2SwapRoute.request
+  }
 
   // TODO: implement velodrome/aerodrome/ramses swap routes
 

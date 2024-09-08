@@ -1,6 +1,13 @@
 import { Address } from 'viem'
 import { arbitrum, base, mainnet, optimism } from 'viem/chains'
 
+export const uniswapV2: { [chainId: number]: { routerAddress: Lowercase<Address> } } = {
+  [arbitrum.id]: { routerAddress: '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' },
+  [base.id]: { routerAddress: '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' },
+  [mainnet.id]: { routerAddress: '0x7a250d5630b4cf539739df2c5dacb4c659f2488d' },
+  [optimism.id]: { routerAddress: '0x4a7b5da61326a6379179b40d00f57e5bbdc962c2' }
+}
+
 export const uniswapV3: {
   [chainId: number]: {
     quoterAddress: Lowercase<Address>
