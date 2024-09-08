@@ -1,8 +1,8 @@
 import { SwapArgs, SwapResult } from '.'
-import { uniPoolABI } from './abis/uniPoolABI'
-import { uniQuoterABI } from './abis/uniQuoterABI'
-import { uniRouterABI } from './abis/uniRouterABI'
-import { uniswapV3FactoryOverrides, uniswapV3Quoter, uniswapV3Router } from './constants'
+import { uniPoolABI } from './abis/uniswap_v3/uniPoolABI'
+import { uniQuoterABI } from './abis/uniswap_v3/uniQuoterABI'
+import { uniRouterABI } from './abis/uniswap_v3/uniRouterABI'
+import { uniswapV3 } from './constants'
 import { CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
 import { encodeRouteToPath, FeeAmount, Pool, Route, SwapQuoter } from '@uniswap/v3-sdk'
 import { usdc, weth } from 'src/constants'
@@ -66,11 +66,11 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
     }
   })
 
-  if (!!uniswapV3Router[chainId] && !!args.executionOptions) {
+  if (!!uniswapV3[chainId]?.routerAddress && !!args.executionOptions) {
     return {
       quote: bestRoute.quote,
       request: {
-        address: uniswapV3Router[chainId],
+        address: uniswapV3[chainId].routerAddress,
         abi: uniRouterABI,
         functionName: 'exactInput',
         args: [
@@ -93,7 +93,7 @@ const getPoolAddresses = (tokenIn: Token, tokenOut: Token) => {
 
   Object.values(FeeAmount).forEach((fee) => {
     if (typeof fee === 'number') {
-      const address = Pool.getAddress(tokenIn, tokenOut, fee, undefined, uniswapV3FactoryOverrides[tokenIn.chainId]) as Address
+      const address = Pool.getAddress(tokenIn, tokenOut, fee, undefined, uniswapV3[tokenIn.chainId]?.factoryAddress) as Address
       poolAddresses.push({ address, fee })
     }
   })
@@ -152,7 +152,8 @@ const getPoolDataWithExtraTokenStep = async (publicClient: PublicClient, tokenIn
 }
 
 const getRouteQuote = async (publicClient: PublicClient, uniPools: Pool[], tokenIn: Token, tokenInAmount: bigint, tokenOut: Token) => {
-  if (!uniswapV3Quoter[tokenIn.chainId]) throw new Error(`No Uniswap V3 Quoter address found for network with chain ID ${tokenIn.chainId}.`)
+  if (!uniswapV3[tokenIn.chainId]?.quoterAddress)
+    throw new Error(`No Uniswap V3 Quoter address found for network with chain ID ${tokenIn.chainId}.`)
 
   const route = new Route(uniPools, tokenIn, tokenOut)
 
@@ -169,7 +170,7 @@ const getRouteQuote = async (publicClient: PublicClient, uniPools: Pool[], token
   })
 
   const { result } = await publicClient.simulateContract({
-    address: uniswapV3Quoter[tokenIn.chainId],
+    address: uniswapV3[tokenIn.chainId].quoterAddress,
     abi: uniQuoterABI,
     // @ts-ignore
     functionName,
