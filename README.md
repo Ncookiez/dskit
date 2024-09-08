@@ -55,7 +55,7 @@ _More Provider Support Coming Soon..._
 
 ### Swaps
 
-Swap or get quotes from one token to another without any external APIs. Current market support includes UniswapV3 pairs with plans to integrate Uniswap V2, Velodrome, Aerodrome, Ramses, and more.
+Swap or get quotes from one token to another without any external APIs. Current market support includes Uniswap V3 and Uniswap V2 pairs with plans to integrate Velodrome, Aerodrome, Ramses, and more.
 
 #### Example:
 
