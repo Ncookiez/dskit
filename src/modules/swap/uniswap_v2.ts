@@ -26,6 +26,8 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
     }
   })
 
+  if (!bestRoute) return { quote: 0n }
+
   if (!!executionOptions) {
     const slippageMultiplier = 1 - Math.floor((executionOptions.slippage ?? 10_000) / 1e6)
     const amountOutMin = getBigIntFraction(bestRoute.quote, slippageMultiplier)

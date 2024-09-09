@@ -1,86 +1,48 @@
 import { SwapArgs, SwapResult } from '.'
-import { uniPoolABI } from './abis/uniswap_v3/uniPoolABI'
 import { uniQuoterABI } from './abis/uniswap_v3/uniQuoterABI'
 import { uniRouterABI } from './abis/uniswap_v3/uniRouterABI'
 import { uniswapV3 } from './constants'
-import { CurrencyAmount, Token, TradeType } from '@uniswap/sdk-core'
-import { encodeRouteToPath, FeeAmount, Pool, Route, SwapQuoter } from '@uniswap/v3-sdk'
 import { usdc, weth } from 'src/constants'
-import { Address, decodeFunctionData, Hash, PublicClient } from 'viem'
+import { getBigIntFraction } from 'src/utils'
+import { Address, ContractFunctionParameters, encodePacked, PublicClient } from 'viem'
+
+const feeTiers = [100, 500, 3_000, 10_000] as const
+type Fee = (typeof feeTiers)[number]
+
+type Path = [Address, Fee, Address, ...(Fee | Address)[]]
 
 export const getSwapRoute = async (publicClient: PublicClient, chainId: number, args: SwapArgs): Promise<SwapResult> => {
-  const tokenIn = new Token(chainId, args.tokenIn.address, args.tokenIn.decimals)
-  const tokenOut = new Token(chainId, args.tokenOut.address, args.tokenOut.decimals)
+  const { tokenIn, tokenOut, executionOptions } = args
 
-  const possiblePoolRoutes: Pool[][] = []
-
-  // IN -> OUT pools
-  const directPools = await getPoolData(publicClient, tokenIn, tokenOut)
-  possiblePoolRoutes.push(...directPools.map((pool) => [pool]))
-
-  // IN -> WETH -> OUT pools
-  if (
-    !!weth[chainId] &&
-    tokenIn.address.toLowerCase() !== weth[chainId].address &&
-    tokenOut.address.toLowerCase() !== weth[chainId].address
-  ) {
-    const wethToken = new Token(chainId, weth[chainId].address, weth[chainId].decimals)
-    const wethPoolRoutes = await getPoolDataWithExtraTokenStep(publicClient, tokenIn, tokenOut, wethToken)
-    possiblePoolRoutes.push(...wethPoolRoutes)
+  if (!uniswapV3[chainId]) {
+    console.warn(`Uniswap V3 routes are not currently supported on network with chain ID ${chainId}`)
+    return { quote: 0n }
   }
 
-  // IN -> USDC -> OUT pools
-  if (
-    !!usdc[chainId] &&
-    tokenIn.address.toLowerCase() !== usdc[chainId].address &&
-    tokenOut.address.toLowerCase() !== usdc[chainId].address
-  ) {
-    const usdcToken = new Token(chainId, usdc[chainId].address, usdc[chainId].decimals)
-    const usdcPoolRoutes = await getPoolDataWithExtraTokenStep(publicClient, tokenIn, tokenOut, usdcToken)
-    possiblePoolRoutes.push(...usdcPoolRoutes)
-  }
+  const possiblePaths = getPossiblePaths(chainId, tokenIn.address, tokenOut.address)
 
-  if (!possiblePoolRoutes.length) throw new Error(`No swap routes found for: ${tokenIn.address} -> ${tokenOut.address}`)
+  const pathQuotes = await getPathQuotes(publicClient, chainId, tokenIn.amount, possiblePaths)
 
-  const routeQuotes: {
-    pools: Pool[]
-    route: Route<typeof tokenIn, typeof tokenOut>
-    quote: bigint
-  }[] = []
-
-  await Promise.all(
-    possiblePoolRoutes.map(async (pools) => {
-      const { route, quote } = await getRouteQuote(publicClient, pools, tokenIn, args.tokenIn.amount, tokenOut)
-
-      routeQuotes.push({ pools, route, quote })
-    })
-  )
-
-  if (!routeQuotes.length || routeQuotes.every((entry) => !entry.quote))
-    throw new Error(`No quotes found for: ${tokenIn.address} -> ${tokenOut.address}`)
-
-  let bestRoute = routeQuotes[0]
-  routeQuotes.forEach((route) => {
+  let bestRoute = pathQuotes[0]
+  pathQuotes.forEach((route) => {
     if (!bestRoute || route.quote > bestRoute.quote) {
       bestRoute = route
     }
   })
 
-  if (!!uniswapV3[chainId]?.routerAddress && !!args.executionOptions) {
+  if (!bestRoute) return { quote: 0n }
+
+  if (!!executionOptions) {
+    const slippageMultiplier = 1 - Math.floor((executionOptions.slippage ?? 10_000) / 1e6)
+    const amountOutMinimum = getBigIntFraction(bestRoute.quote, slippageMultiplier)
+
     return {
       quote: bestRoute.quote,
       request: {
         address: uniswapV3[chainId].routerAddress,
         abi: uniRouterABI,
         functionName: 'exactInput',
-        args: [
-          {
-            path: encodeRouteToPath(bestRoute.route, false) as Hash,
-            recipient: args.executionOptions.recipient,
-            amountIn: args.tokenIn.amount,
-            amountOutMinimum: 1n // TODO: use given slippage to calculate amountOutMin
-          }
-        ]
+        args: [{ path: getPathBytes(bestRoute.path), recipient: executionOptions.recipient, amountIn: tokenIn.amount, amountOutMinimum }]
       }
     }
   }
@@ -88,97 +50,83 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
   return { quote: bestRoute.quote }
 }
 
-const getPoolAddresses = (tokenIn: Token, tokenOut: Token) => {
-  const poolAddresses: { address: Address; fee: FeeAmount }[] = []
+const getPossiblePaths = (chainId: number, tokenInAddress: Address, tokenOutAddress: Address) => {
+  const possiblePaths: Path[] = []
+  const possibleTokenPaths: Address[][] = []
 
-  Object.values(FeeAmount).forEach((fee) => {
-    if (typeof fee === 'number') {
-      const address = Pool.getAddress(tokenIn, tokenOut, fee, undefined, uniswapV3[tokenIn.chainId]?.factoryAddress) as Address
-      poolAddresses.push({ address, fee })
-    }
-  })
+  // IN -> OUT
+  possibleTokenPaths.push([tokenInAddress, tokenOutAddress])
 
-  return [...poolAddresses]
+  // IN -> WETH -> OUT
+  if (
+    !!weth[chainId] &&
+    tokenInAddress.toLowerCase() !== weth[chainId].address &&
+    tokenOutAddress.toLowerCase() !== weth[chainId].address
+  ) {
+    possibleTokenPaths.push([tokenInAddress, weth[chainId].address, tokenOutAddress])
+  }
+
+  // IN -> USDC -> OUT
+  if (
+    !!usdc[chainId] &&
+    tokenInAddress.toLowerCase() !== usdc[chainId].address &&
+    tokenOutAddress.toLowerCase() !== usdc[chainId].address
+  ) {
+    possibleTokenPaths.push([tokenInAddress, usdc[chainId].address, tokenOutAddress])
+  }
+
+  possibleTokenPaths.forEach((pathAddresses) => possiblePaths.push(...getPathVariants(pathAddresses)))
+
+  return possiblePaths
 }
 
-const getPoolData = async (publicClient: PublicClient, tokenIn: Token, tokenOut: Token) => {
-  const pools: Pool[] = []
+// TODO: write better (recursive?) algorithm to handle any length of array
+const getPathVariants = (pathAddresses: Address[]) => {
+  const pathVariants: Path[] = []
 
-  const poolAddresses = getPoolAddresses(tokenIn, tokenOut)
-
-  const multicallResults = await publicClient.multicall({
-    contracts: poolAddresses
-      .map((pool) => [
-        { address: pool.address, abi: uniPoolABI, functionName: 'liquidity' },
-        { address: pool.address, abi: uniPoolABI, functionName: 'slot0' }
-      ])
-      .reduce((a, b) => a.concat(b))
-  })
-
-  poolAddresses.forEach((pool, i) => {
-    const resultOffset = i * 2
-
-    const liquidityEntry = multicallResults[resultOffset]
-    const slot0Entry = multicallResults[1 + resultOffset]
-
-    if (liquidityEntry.status === 'success' && slot0Entry.status === 'success') {
-      const liquidity = liquidityEntry.result as bigint
-      const slot0 = slot0Entry.result as any as [bigint, number]
-      const sqrtRatioX96 = slot0[0]
-      const tick = slot0[1]
-
-      if (!!liquidity) {
-        pools.push(new Pool(tokenIn, tokenOut, pool.fee, String(sqrtRatioX96), String(liquidity), tick))
+  if (pathAddresses.length === 2) {
+    feeTiers.forEach((fee) => {
+      pathVariants.push([pathAddresses[0], fee, pathAddresses[1]])
+    })
+  } else if (pathAddresses.length === 3) {
+    for (let i = 0; i < feeTiers.length; i++) {
+      for (let j = 0; j < feeTiers.length; j++) {
+        pathVariants.push([pathAddresses[0], feeTiers[i], pathAddresses[1], feeTiers[j], pathAddresses[2]])
       }
-    }
-  })
-
-  return pools
-}
-
-const getPoolDataWithExtraTokenStep = async (publicClient: PublicClient, tokenIn: Token, tokenOut: Token, tokenStep: Token) => {
-  const pools: Pool[][] = []
-
-  const firstStepPools = await getPoolData(publicClient, tokenIn, tokenStep)
-  const secondStepPools = await getPoolData(publicClient, tokenStep, tokenOut)
-
-  for (let i = 0; i < firstStepPools.length; i++) {
-    for (let j = 0; j < secondStepPools.length; j++) {
-      pools.push([firstStepPools[i], secondStepPools[j]])
     }
   }
 
-  return pools
+  return pathVariants
 }
 
-const getRouteQuote = async (publicClient: PublicClient, uniPools: Pool[], tokenIn: Token, tokenInAmount: bigint, tokenOut: Token) => {
-  if (!uniswapV3[tokenIn.chainId]?.quoterAddress)
-    throw new Error(`No Uniswap V3 Quoter address found for network with chain ID ${tokenIn.chainId}.`)
+const getPathQuotes = async (publicClient: PublicClient, chainId: number, tokenInAmount: bigint, paths: Path[]) => {
+  const quotes: { path: Path; quote: bigint }[] = []
 
-  const route = new Route(uniPools, tokenIn, tokenOut)
-
-  const { calldata } = SwapQuoter.quoteCallParameters(
-    route,
-    CurrencyAmount.fromRawAmount(tokenIn, tokenInAmount.toString()),
-    TradeType.EXACT_INPUT,
-    { useQuoterV2: true }
-  )
-
-  const { functionName, args } = decodeFunctionData({
+  const contracts: ContractFunctionParameters<typeof uniQuoterABI, 'nonpayable', 'quoteExactInput'>[] = paths.map((path) => ({
+    address: uniswapV3[chainId].quoterAddress,
     abi: uniQuoterABI,
-    data: calldata as `0x${string}`
+    functionName: 'quoteExactInput',
+    args: [getPathBytes(path)!, tokenInAmount]
+  }))
+
+  const quotesMulticall = await publicClient.multicall({ contracts })
+
+  paths.forEach((path, i) => {
+    const multicall = quotesMulticall[i]
+
+    if (multicall?.status === 'success' && typeof multicall.result === 'object' && typeof multicall.result[0] === 'bigint') {
+      quotes.push({ path, quote: multicall.result[0] })
+    }
   })
 
-  const { result } = await publicClient.simulateContract({
-    address: uniswapV3[tokenIn.chainId].quoterAddress,
-    abi: uniQuoterABI,
-    // @ts-ignore
-    functionName,
-    // @ts-ignore
-    args
-  })
+  return quotes
+}
 
-  const quote = (result?.[0] as bigint | undefined) ?? 0n
-
-  return { route, quote }
+// TODO: write better algorithm to handle any path length
+const getPathBytes = (path: Path) => {
+  if (path.length === 3) {
+    return encodePacked(['address', 'uint24', 'address'], path as [Address, Fee, Address])
+  } else if (path.length === 5) {
+    return encodePacked(['address', 'uint24', 'address', 'uint24', 'address'], path as [Address, Fee, Address, Fee, Address])
+  }
 }
