@@ -1,5 +1,6 @@
 import { getSwapRoute as getUniswapV2SwapRoute } from './uniswap_v2'
 import { getSwapRoute as getUniswapV3SwapRoute } from './uniswap_v3'
+import { getSwapRoute as getVelodromeSwapRoute } from './velodrome'
 import { Address, ContractFunctionParameters, PublicClient } from 'viem'
 
 export interface SwapArgs {
@@ -14,7 +15,7 @@ export interface SwapResult {
 }
 
 export interface SwapRouteConfig {
-  exchanges?: { includeOnly?: ('uniswap_v2' | 'uniswap_v3')[]; includeRoutesThroughTokens?: Address[] }
+  exchanges?: { includeOnly?: ('uniswap_v2' | 'uniswap_v3' | 'velodrome')[]; includeRoutesThroughTokens?: Address[] }
 }
 
 export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs, config?: SwapRouteConfig): Promise<SwapResult> => {
@@ -49,7 +50,17 @@ export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs, c
     swapRoute.request = uniswapV2SwapRoute.request
   }
 
-  // TODO: implement velodrome/aerodrome/ramses swap routes
+  const velodromeSwapRoute =
+    !config?.exchanges?.includeOnly?.length || config.exchanges.includeOnly.includes('velodrome')
+      ? await getVelodromeSwapRoute(publicClient, chainId, args, {
+          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens
+        })
+      : { quote: 0n }
+
+  if (velodromeSwapRoute.quote > swapRoute.quote) {
+    swapRoute.quote = velodromeSwapRoute.quote
+    swapRoute.request = velodromeSwapRoute.request
+  }
 
   return swapRoute
 }
