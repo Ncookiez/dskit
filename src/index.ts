@@ -50,12 +50,14 @@ export class DSKit {
       blockModule.getBlockNearTimestamp(await this.getPublicClient(), args)
   }
 
+  // TODO: take in optional swap route config as well
   price = {
     ofToken: async (args: priceModule.GetTokenPriceArgs) => priceModule.getTokenPrice(await this.getPublicClient(), args)
   }
 
   swap = {
-    route: async (args: swapModule.SwapArgs) => swapModule.getSwapRoute(await this.getPublicClient(), args)
+    route: async (args: swapModule.SwapArgs, config?: swapModule.SwapRouteConfig) =>
+      swapModule.getSwapRoute(await this.getPublicClient(), args, config)
   }
 
   zap = {
