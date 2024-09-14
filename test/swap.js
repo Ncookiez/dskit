@@ -41,5 +41,18 @@ describe('swap', function () {
 
       assert(swapRoute?.quote)
     })
+
+    it('should return a swap route for POOL -> DAI on Ethereum', async function () {
+      this.timeout(30_000)
+
+      const dskit = new DSKit({ rpcUrl: process.env.ETHEREUM_RPC_URL })
+
+      const swapRoute = await dskit.swap.route({
+        tokenIn: { address: '0x0cEC1A9154Ff802e7934Fc916Ed7Ca50bDE6844e', decimals: 18, amount: 100n ** 18n },
+        tokenOut: { address: '0x6B175474E89094C44Da98b954EedeAC495271d0F', decimals: 18 }
+      })
+
+      assert(swapRoute?.quote)
+    })
   })
 })

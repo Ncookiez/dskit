@@ -2,7 +2,7 @@ import { SwapArgs, SwapResult } from '.'
 import { uniQuoterABI } from './abis/uniswap_v3/uniQuoterABI'
 import { uniRouterABI } from './abis/uniswap_v3/uniRouterABI'
 import { uniswapV3 } from './constants'
-import { usdc, weth } from 'src/constants'
+import { getPossiblePaths as getPossibleUniswapV2Paths } from './uniswap_v2'
 import { getBigIntFraction } from 'src/utils'
 import { Address, ContractFunctionParameters, encodePacked, PublicClient } from 'viem'
 
@@ -11,7 +11,12 @@ type Fee = (typeof feeTiers)[number]
 
 type Path = [Address, Fee, Address, ...(Fee | Address)[]]
 
-export const getSwapRoute = async (publicClient: PublicClient, chainId: number, args: SwapArgs): Promise<SwapResult> => {
+export const getSwapRoute = async (
+  publicClient: PublicClient,
+  chainId: number,
+  args: SwapArgs,
+  config?: { includeRoutesThroughTokens?: Address[] }
+): Promise<SwapResult> => {
   const { tokenIn, tokenOut, executionOptions } = args
 
   if (!uniswapV3[chainId]) {
@@ -19,7 +24,7 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
     return { quote: 0n }
   }
 
-  const possiblePaths = getPossiblePaths(chainId, tokenIn.address, tokenOut.address)
+  const possiblePaths = getPossiblePaths(chainId, tokenIn.address, tokenOut.address, config?.includeRoutesThroughTokens)
 
   const pathQuotes = await getPathQuotes(publicClient, chainId, tokenIn.amount, possiblePaths)
 
@@ -50,30 +55,10 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
   return { quote: bestRoute.quote }
 }
 
-const getPossiblePaths = (chainId: number, tokenInAddress: Address, tokenOutAddress: Address) => {
+const getPossiblePaths = (chainId: number, tokenInAddress: Address, tokenOutAddress: Address, includeRoutesThroughTokens?: Address[]) => {
   const possiblePaths: Path[] = []
-  const possibleTokenPaths: Address[][] = []
 
-  // IN -> OUT
-  possibleTokenPaths.push([tokenInAddress, tokenOutAddress])
-
-  // IN -> WETH -> OUT
-  if (
-    !!weth[chainId] &&
-    tokenInAddress.toLowerCase() !== weth[chainId].address &&
-    tokenOutAddress.toLowerCase() !== weth[chainId].address
-  ) {
-    possibleTokenPaths.push([tokenInAddress, weth[chainId].address, tokenOutAddress])
-  }
-
-  // IN -> USDC -> OUT
-  if (
-    !!usdc[chainId] &&
-    tokenInAddress.toLowerCase() !== usdc[chainId].address &&
-    tokenOutAddress.toLowerCase() !== usdc[chainId].address
-  ) {
-    possibleTokenPaths.push([tokenInAddress, usdc[chainId].address, tokenOutAddress])
-  }
+  const possibleTokenPaths = getPossibleUniswapV2Paths(chainId, tokenInAddress, tokenOutAddress, includeRoutesThroughTokens)
 
   possibleTokenPaths.forEach((pathAddresses) => possiblePaths.push(...getPathVariants(pathAddresses)))
 
@@ -92,6 +77,14 @@ const getPathVariants = (pathAddresses: Address[]) => {
     for (let i = 0; i < feeTiers.length; i++) {
       for (let j = 0; j < feeTiers.length; j++) {
         pathVariants.push([pathAddresses[0], feeTiers[i], pathAddresses[1], feeTiers[j], pathAddresses[2]])
+      }
+    }
+  } else if (pathAddresses.length === 4) {
+    for (let i = 0; i < feeTiers.length; i++) {
+      for (let j = 0; j < feeTiers.length; j++) {
+        for (let k = 0; k < feeTiers.length; k++) {
+          pathVariants.push([pathAddresses[0], feeTiers[i], pathAddresses[1], feeTiers[j], pathAddresses[2], feeTiers[k], pathAddresses[3]])
+        }
       }
     }
   }
@@ -128,5 +121,10 @@ const getPathBytes = (path: Path) => {
     return encodePacked(['address', 'uint24', 'address'], path as [Address, Fee, Address])
   } else if (path.length === 5) {
     return encodePacked(['address', 'uint24', 'address', 'uint24', 'address'], path as [Address, Fee, Address, Fee, Address])
+  } else if (path.length === 7) {
+    return encodePacked(
+      ['address', 'uint24', 'address', 'uint24', 'address', 'uint24', 'address'],
+      path as [Address, Fee, Address, Fee, Address, Fee, Address]
+    )
   }
 }

@@ -13,18 +13,36 @@ export interface SwapResult {
   request?: ContractFunctionParameters & { address: Address }
 }
 
-// TODO: enable opting in or out of any given dex
-export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs): Promise<SwapResult> => {
+export interface SwapRouteConfig {
+  exchanges?: { includeOnly?: ('uniswap_v2' | 'uniswap_v3')[]; includeRoutesThroughTokens?: Address[] }
+}
+
+export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs, config?: SwapRouteConfig): Promise<SwapResult> => {
   if (args.tokenIn.address.toLowerCase() === args.tokenOut.address.toLowerCase())
     throw new Error(`The "tokenIn" and "tokenOut" addresses cannot be the same.`)
 
   const chainId = await publicClient.getChainId()
 
-  const uniswapV3SwapRoute = await getUniswapV3SwapRoute(publicClient, chainId, args)
+  const swapRoute: SwapResult = { quote: 0n }
 
-  const swapRoute = { quote: uniswapV3SwapRoute.quote, request: uniswapV3SwapRoute.request }
+  const uniswapV3SwapRoute =
+    !config?.exchanges?.includeOnly?.length || config.exchanges.includeOnly.includes('uniswap_v3')
+      ? await getUniswapV3SwapRoute(publicClient, chainId, args, {
+          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens
+        })
+      : { quote: 0n }
 
-  const uniswapV2SwapRoute = await getUniswapV2SwapRoute(publicClient, chainId, args)
+  if (uniswapV3SwapRoute.quote > swapRoute.quote) {
+    swapRoute.quote = uniswapV3SwapRoute.quote
+    swapRoute.request = uniswapV3SwapRoute.request
+  }
+
+  const uniswapV2SwapRoute =
+    !config?.exchanges?.includeOnly?.length || config.exchanges.includeOnly.includes('uniswap_v2')
+      ? await getUniswapV2SwapRoute(publicClient, chainId, args, {
+          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens
+        })
+      : { quote: 0n }
 
   if (uniswapV2SwapRoute.quote > swapRoute.quote) {
     swapRoute.quote = uniswapV2SwapRoute.quote
@@ -33,5 +51,5 @@ export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs): 
 
   // TODO: implement velodrome/aerodrome/ramses swap routes
 
-  return { quote: uniswapV3SwapRoute.quote, request: uniswapV3SwapRoute.request }
+  return swapRoute
 }

@@ -3,11 +3,16 @@ import { uniRouterABI } from './abis/uniswap_v2/uniRouterABI'
 import { uniswapV2 } from './constants'
 import { usdc, weth } from 'src/constants'
 import { getBigIntFraction } from 'src/utils'
-import { Address, ContractFunctionParameters, PublicClient } from 'viem'
+import { Address, ContractFunctionParameters, isAddress, PublicClient } from 'viem'
 
 type Path = [Address, Address, ...Address[]]
 
-export const getSwapRoute = async (publicClient: PublicClient, chainId: number, args: SwapArgs): Promise<SwapResult> => {
+export const getSwapRoute = async (
+  publicClient: PublicClient,
+  chainId: number,
+  args: SwapArgs,
+  config?: { includeRoutesThroughTokens?: Address[] }
+): Promise<SwapResult> => {
   const { tokenIn, tokenOut, executionOptions } = args
 
   if (!uniswapV2[chainId]) {
@@ -15,7 +20,7 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
     return { quote: 0n }
   }
 
-  const possiblePaths = getPossiblePaths(chainId, tokenIn.address, tokenOut.address)
+  const possiblePaths = getPossiblePaths(chainId, tokenIn.address, tokenOut.address, config?.includeRoutesThroughTokens)
 
   const pathQuotes = await getPathQuotes(publicClient, chainId, tokenIn.amount, possiblePaths)
 
@@ -47,29 +52,39 @@ export const getSwapRoute = async (publicClient: PublicClient, chainId: number, 
   return { quote: bestRoute.quote }
 }
 
-const getPossiblePaths = (chainId: number, tokenInAddress: Address, tokenOutAddress: Address) => {
+export const getPossiblePaths = (
+  chainId: number,
+  tokenInAddress: Address,
+  tokenOutAddress: Address,
+  includeRoutesThroughTokens?: Address[]
+) => {
   const possiblePaths: Path[] = []
+  const tokensToRouteThrough = new Set<Lowercase<Address>>()
+
+  const unfilteredTokensToRouteThrough = [weth[chainId]?.address, usdc[chainId]?.address, ...(includeRoutesThroughTokens ?? [])]
+
+  unfilteredTokensToRouteThrough.forEach((_tokenAddress) => {
+    const tokenAddress = !!_tokenAddress && isAddress(_tokenAddress) ? (_tokenAddress.toLowerCase() as Lowercase<Address>) : undefined
+
+    if (!!tokenAddress && tokenAddress !== tokenInAddress.toLowerCase() && tokenAddress !== tokenOutAddress.toLowerCase()) {
+      tokensToRouteThrough.add(tokenAddress)
+    }
+  })
 
   // IN -> OUT
   possiblePaths.push([tokenInAddress, tokenOutAddress])
 
-  // IN -> WETH -> OUT
-  if (
-    !!weth[chainId] &&
-    tokenInAddress.toLowerCase() !== weth[chainId].address &&
-    tokenOutAddress.toLowerCase() !== weth[chainId].address
-  ) {
-    possiblePaths.push([tokenInAddress, weth[chainId].address, tokenOutAddress])
-  }
+  tokensToRouteThrough.forEach((tokenAddress) => {
+    // IN -> [TOKEN] -> OUT
+    possiblePaths.push([tokenInAddress, tokenAddress, tokenOutAddress])
 
-  // IN -> USDC -> OUT
-  if (
-    !!usdc[chainId] &&
-    tokenInAddress.toLowerCase() !== usdc[chainId].address &&
-    tokenOutAddress.toLowerCase() !== usdc[chainId].address
-  ) {
-    possiblePaths.push([tokenInAddress, usdc[chainId].address, tokenOutAddress])
-  }
+    tokensToRouteThrough.forEach((otherTokenAddress) => {
+      if (tokenAddress !== otherTokenAddress) {
+        // IN -> [TOKEN] -> [TOKEN] -> OUT
+        possiblePaths.push([tokenInAddress, tokenAddress, otherTokenAddress, tokenOutAddress])
+      }
+    })
+  })
 
   return possiblePaths
 }
