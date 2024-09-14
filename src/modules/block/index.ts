@@ -20,10 +20,10 @@ export interface GetBlockNearTimestampArgs {
  * @param verbose verbose logs for block fetching info
  * @returns a Block object close to the target timestamp
  */
-export async function getBlockNearTimestamp(
+export const getBlockNearTimestamp = async (
   publicClient: PublicClient,
   { targetTimestamp, targetRangeSeconds = 60, verbose = false }: GetBlockNearTimestampArgs
-) {
+) => {
   const targetTimestampAsBigInt = typeof targetTimestamp === 'number' ? BigInt(targetTimestamp) : targetTimestamp
 
   // Check if valid range was given

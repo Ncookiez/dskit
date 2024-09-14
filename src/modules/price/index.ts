@@ -1,4 +1,4 @@
-import { getSwapRoute } from '../swap'
+import { getSwapRoute, SwapRouteConfig } from '../swap'
 import { dolphinAddress, weth } from 'src/constants'
 import { Address, formatUnits, PublicClient } from 'viem'
 
@@ -14,11 +14,16 @@ export interface GetTokenPriceArgs {
  * @param tokenDenominator The token to denominate the price in (default: WETH)
  * For example, if the `token` is WETH and the `tokenDenominator` is USDC, this function will return how
  * much 1 WETH is worth in USDC in decimal format (ex: 2750.86758482101).
+ * @param swapRouteConfig Optional configuration for queried swap routes
  *
  * @dev If either token is specified as the `0xeee...eee` address, it will assume it is WETH and use the
  * WETH address for that network.
  */
-export async function getTokenPrice(publicClient: PublicClient, { token, tokenDenominator }: GetTokenPriceArgs) {
+export const getTokenPrice = async (
+  publicClient: PublicClient,
+  { token, tokenDenominator }: GetTokenPriceArgs,
+  swapRouteConfig?: SwapRouteConfig
+) => {
   // Default the token denominator to WETH
   const chainId = publicClient.chain?.id ?? (await publicClient.getChainId())
   const networkWeth = weth[chainId]
@@ -54,16 +59,18 @@ export async function getTokenPrice(publicClient: PublicClient, { token, tokenDe
 
   // Get the swap quote for token -> tokenDenominator for some small amount (10 ^ decimals)
   const swapAmount = 10n ** BigInt(token.decimals)
-  const swapForward = await getSwapRoute(publicClient, {
-    tokenIn: { ...token, amount: swapAmount },
-    tokenOut: tokenDenominator
-  })
+  const swapForward = await getSwapRoute(
+    publicClient,
+    { tokenIn: { ...token, amount: swapAmount }, tokenOut: tokenDenominator },
+    swapRouteConfig
+  )
 
   // Get the reverse quote
-  const swapBack = await getSwapRoute(publicClient, {
-    tokenIn: { ...tokenDenominator, amount: swapForward.quote },
-    tokenOut: token
-  })
+  const swapBack = await getSwapRoute(
+    publicClient,
+    { tokenIn: { ...tokenDenominator, amount: swapForward.quote }, tokenOut: token },
+    swapRouteConfig
+  )
 
   // If the full circle result is less than the starting amount of token, then compute what fee would
   // likely have been taken on just the forward swap by computing half of the total loss.
