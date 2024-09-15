@@ -11,7 +11,7 @@ export interface SwapArgs {
 
 export interface SwapResult {
   quote: bigint
-  request?: ContractFunctionParameters & { address: Address }
+  request?: ContractFunctionParameters
 }
 
 export interface SwapRouteConfig {

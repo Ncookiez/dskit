@@ -61,7 +61,8 @@ export class DSKit {
   }
 
   zap = {
-    tx: async (args: zapModule.ZapTxArgs) => zapModule.getZapTx(await this.getPublicClient(), args)
+    tx: async (args: zapModule.ZapTxArgs, swapRouteConfig?: swapModule.SwapRouteConfig) =>
+      zapModule.getZapTx(await this.getPublicClient(), args, swapRouteConfig)
   }
 }
 

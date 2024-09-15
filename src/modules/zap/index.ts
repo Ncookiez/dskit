@@ -1,4 +1,4 @@
-import { getSwapRoute } from '../swap'
+import { getSwapRoute, SwapRouteConfig } from '../swap'
 import { zapRouterABI } from './abis/zapRouterABI'
 import { zapRouter, zapTokenManager } from './constants'
 import { weth } from 'src/constants'
@@ -17,7 +17,7 @@ export interface ZapTxArgs {
 type ZapConfig = ContractFunctionArgs<typeof zapRouterABI, 'payable', 'executeOrder'>[0]
 type ZapRoute = Mutable<ContractFunctionArgs<typeof zapRouterABI, 'payable', 'executeOrder'>[1]>
 
-export const getZapTx = async (publicClient: PublicClient, args: ZapTxArgs) => {
+export const getZapTx = async (publicClient: PublicClient, args: ZapTxArgs, swapRouteConfig?: SwapRouteConfig) => {
   const { tokenIn, swapTo, action, tokenOut, userAddress, recipient } = args
 
   if (tokenIn.address.toLowerCase() === swapTo?.address.toLowerCase())
@@ -74,11 +74,11 @@ export const getZapTx = async (publicClient: PublicClient, args: ZapTxArgs) => {
     if (swapTo.address.toLowerCase() !== weth[chainId].address) {
       const swapTokenIn = isDolphinAddress(tokenIn.address) ? { ...weth[chainId], amount: tokenIn.amount } : tokenIn
 
-      const swapRoute = await getSwapRoute(publicClient, {
-        tokenIn: swapTokenIn,
-        tokenOut: swapTo,
-        executionOptions: { recipient: zapRouter[chainId] }
-      })
+      const swapRoute = await getSwapRoute(
+        publicClient,
+        { tokenIn: swapTokenIn, tokenOut: swapTo, executionOptions: { recipient: zapRouter[chainId] } },
+        swapRouteConfig
+      )
 
       if (!swapRoute.request) throw new Error('No execution context for swap route found.')
 
