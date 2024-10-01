@@ -21,12 +21,15 @@ export interface GetTokenPriceArgs {
  */
 export const getTokenPrice = async (
   publicClient: PublicClient,
-  { token, tokenDenominator }: GetTokenPriceArgs,
+  { token: _token, tokenDenominator }: GetTokenPriceArgs,
   swapRouteConfig?: SwapRouteConfig
 ) => {
-  // Default the token denominator to WETH
+  const token = { ..._token }
+
   const chainId = publicClient.chain?.id ?? (await publicClient.getChainId())
   const networkWeth = weth[chainId]
+
+  // Default the token denominator to WETH
   if (!tokenDenominator) {
     tokenDenominator = networkWeth
   }

@@ -48,6 +48,17 @@ describe('price', () => {
         const priceWethToDolphin = await dskit.price.ofToken({ token: weth, tokenDenominator: { address: dolphinAddress, decimals: 18 } })
         expect(priceWethToDolphin).to.equal(1)
       })
+
+      it('should be a pure function', async function () {
+        this.timeout(10_000)
+
+        const token = { address: dolphinAddress, decimals: 18 }
+
+        await dskit.price.ofToken({ token })
+
+        expect(token.address).to.equal(dolphinAddress)
+        expect(token.decimals).to.equal(18)
+      })
     })
 
     describe('on Base', () => {
@@ -60,6 +71,5 @@ describe('price', () => {
         expect(poolPrice).to.be.gt(0)
       })
     })
-
   })
 })
