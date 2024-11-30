@@ -1,8 +1,9 @@
 import * as blockModule from './modules/block'
+import * as eventModule from './modules/event'
 import * as priceModule from './modules/price'
 import * as swapModule from './modules/swap'
 import * as zapModule from './modules/zap'
-import { createPublicClient, http, PublicClient } from 'viem'
+import { AbiEvent, createPublicClient, http, PublicClient } from 'viem'
 import * as chains from 'viem/chains'
 
 // TODO: support ethers or generic public clients as well
@@ -50,6 +51,11 @@ export class DSKit {
       blockModule.getBlockNearTimestamp(await this.getPublicClient(), args)
   }
 
+  event = {
+    query: async <Event extends AbiEvent>(args: eventModule.QueryArgs<Event>, config?: eventModule.QueryConfig<Event>) =>
+      eventModule.query(await this.getPublicClient(), args, config)
+  }
+
   price = {
     ofToken: async (args: priceModule.GetTokenPriceArgs, swapRouteConfig?: swapModule.SwapRouteConfig) =>
       priceModule.getTokenPrice(await this.getPublicClient(), args, swapRouteConfig)
@@ -70,6 +76,7 @@ export class DSKit {
  * Modules
  */
 export * from './modules/block'
+export * from './modules/event'
 export * from './modules/price'
 export * from './modules/swap'
 export * from './modules/zap'
