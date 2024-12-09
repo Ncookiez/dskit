@@ -39,14 +39,14 @@ describe('price', () => {
         const priceUsdcToUsdcDifferentDecimal = await dskit.price.ofToken({ token: usdc, tokenDenominator: { address: usdc.address, decimals: 18 } })
         expect(priceUsdcToUsdcDifferentDecimal).to.equal(1)
 
-        const priceDolphinToDolphin = await dskit.price.ofToken({ token: { address: dolphinAddress, decimals: 18 }, tokenDenominator: { address: dolphinAddress, decimals: 18 } })
-        expect(priceDolphinToDolphin).to.equal(1)
+        const priceDolphinToNative = await dskit.price.ofToken({ token: { address: dolphinAddress, decimals: 18 }, tokenDenominator: { address: dolphinAddress, decimals: 18 } })
+        expect(priceDolphinToNative).to.equal(1)
 
         const priceDolphinToWeth = await dskit.price.ofToken({ token: { address: dolphinAddress, decimals: 18 }, tokenDenominator: weth })
         expect(priceDolphinToWeth).to.equal(1)
 
-        const priceWethToDolphin = await dskit.price.ofToken({ token: weth, tokenDenominator: { address: dolphinAddress, decimals: 18 } })
-        expect(priceWethToDolphin).to.equal(1)
+        const priceWethToNative = await dskit.price.ofToken({ token: weth, tokenDenominator: { address: dolphinAddress, decimals: 18 } })
+        expect(priceWethToNative).to.equal(1)
       })
 
       it('should be a pure function', async function () {
