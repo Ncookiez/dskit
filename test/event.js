@@ -50,5 +50,39 @@ describe('event', () => {
         assert(transferEvents[0].eventName === 'Transfer')
       })
     })
+
+    describe('on Base', () => {
+      const dskit = new DSKit({ rpcUrl: process.env.BASE_RPC_URL })
+
+      it('should return complex events over large block ranges', async function () {
+        this.timeout(60_000)
+
+        const claimedPrizeEvents = await dskit.event.query({
+          address: '0x45b2010d8A4f08b53c9fa7544C51dFd9733732cb',
+          event: {
+            anonymous: false,
+            inputs: [
+              { indexed: true, internalType: 'address', name: 'vault', type: 'address' },
+              { indexed: true, internalType: 'address', name: 'winner', type: 'address' },
+              { indexed: true, internalType: 'address', name: 'recipient', type: 'address' },
+              { indexed: false, internalType: 'uint24', name: 'drawId', type: 'uint24' },
+              { indexed: false, internalType: 'uint8', name: 'tier', type: 'uint8' },
+              { indexed: false, internalType: 'uint32', name: 'prizeIndex', type: 'uint32' },
+              { indexed: false, internalType: 'uint152', name: 'payout', type: 'uint152' },
+              { indexed: false, internalType: 'uint96', name: 'claimReward', type: 'uint96' },
+              { indexed: false, internalType: 'address', name: 'claimRewardRecipient', type: 'address' }
+            ],
+            name: 'ClaimedPrize',
+            type: 'event'
+          },
+          args: { vault: '0xAF2B22B7155da01230D72289DCEcB7C41a5a4bD8' },
+          fromBlock: 19_862_159n,
+          toBlock: 20_500_000n
+        })
+
+        assert(claimedPrizeEvents.length > 0)
+        assert(claimedPrizeEvents[0].eventName === 'ClaimedPrize')
+      })
+    })
   })
 })

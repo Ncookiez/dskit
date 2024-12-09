@@ -37,6 +37,8 @@ export const query = async <Event extends AbiEvent>(publicClient: PublicClient, 
   }
 
   let maxPageSizeInBlocks = config?.maxPageSizeInBlocks ?? 10_000_000n
+  let paginationDelayInMs = config?.paginationDelayInMs ?? 0
+  let maxRetries = config?.maxRetries ?? 2
 
   let fromBlock = args.fromBlock
   let toBlock = args.fromBlock + maxPageSizeInBlocks - 1n
@@ -45,14 +47,68 @@ export const query = async <Event extends AbiEvent>(publicClient: PublicClient, 
     toBlock = maxBlock
   }
 
-  // TODO: if query fails, retry a few times
-  // TODO: if query fails with rate limited error code, increase pagination delay before retry
-  // TODO: if query fails otherwise, lower max page size in blocks before retry
   while (toBlock <= maxBlock) {
-    const newLogsPage = await publicClient.getLogs({ ...args, fromBlock, toBlock, strict: true })
-    logs.push(...newLogsPage)
+    let isSuccess = false
+    let retryCount = 0
 
-    newLogsPage.forEach((log) => config?.callback?.(log))
+    while (!isSuccess && retryCount < maxRetries) {
+      try {
+        const newLogsPage = await publicClient.getLogs({ ...args, fromBlock, toBlock, strict: true })
+        logs.push(...newLogsPage)
+
+        newLogsPage.forEach((log) => config?.callback?.(log))
+
+        isSuccess = true
+      } catch (err: any) {
+        if (err.code === 429) {
+          const oldPaginationDelayInMs = paginationDelayInMs
+
+          if (paginationDelayInMs === 0) {
+            paginationDelayInMs = 1_000
+          } else {
+            paginationDelayInMs *= 2
+          }
+
+          if (retryCount < maxRetries - 1) {
+            console.warn(
+              `Event query ran into rate limits (${args.event.name}) - retrying with updated delay; ${oldPaginationDelayInMs}ms -> ${paginationDelayInMs}ms`
+            )
+          }
+        } else {
+          const blockRange = toBlock - fromBlock
+
+          if (blockRange > 1_000n) {
+            const oldMaxPageSizeInBlocks = maxPageSizeInBlocks
+
+            if (blockRange >= 100_000n && maxPageSizeInBlocks >= 1_000_000n) {
+              maxPageSizeInBlocks = 100_000n
+            } else if (blockRange >= 10_000n && maxPageSizeInBlocks >= 100_000n) {
+              maxPageSizeInBlocks = 10_000n
+            } else if (blockRange >= 1_000n && maxPageSizeInBlocks >= 10_000) {
+              maxPageSizeInBlocks = 1_000n
+            } else {
+              maxPageSizeInBlocks = maxPageSizeInBlocks / 2n
+            }
+
+            toBlock = fromBlock + maxPageSizeInBlocks - 1n
+
+            if (retryCount < maxRetries - 1) {
+              console.warn(
+                `Event query failed (${
+                  args.event.name
+                }) - retrying with updated max block range; ${oldMaxPageSizeInBlocks.toLocaleString()} -> ${maxPageSizeInBlocks.toLocaleString()}`
+              )
+            }
+          }
+        }
+
+        retryCount++
+
+        if (retryCount === maxRetries) {
+          throw new Error(`Event query failed (${args.event.name})`, err)
+        }
+      }
+    }
 
     fromBlock = toBlock + 1n
 
@@ -62,8 +118,8 @@ export const query = async <Event extends AbiEvent>(publicClient: PublicClient, 
       toBlock += maxPageSizeInBlocks
     }
 
-    if (!!config?.paginationDelayInMs) {
-      await new Promise((resolve) => setTimeout(resolve, config.paginationDelayInMs))
+    if (!!paginationDelayInMs) {
+      await new Promise((resolve) => setTimeout(resolve, paginationDelayInMs))
     }
   }
 
