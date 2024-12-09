@@ -12,6 +12,7 @@ _A lightweight **"Dapp Survival Kit"** to help applications deliver fully functi
   - [Swaps](#swaps)
   - [Prices](#prices)
   - [Zaps](#zaps)
+  - [Events](#events)
   - [Blocks](#blocks)
   - [More](#more-to-come)
 - [Why DSKit?](#why-dskit)
@@ -145,6 +146,41 @@ const route = zapTx.route
 
 ---
 
+### Events
+
+Query event logs without worrying about rate limits, block range limits, setting up callbacks, etc.
+
+#### Example:
+
+```js
+const transferEvents = await dskit.event.query(
+  {
+    address: '0x0cEC1A9154Ff802e7934Fc916Ed7Ca50bDE6844e',
+    event: {
+      type: 'event',
+      name: 'Transfer',
+      inputs: [
+        { indexed: true, name: 'from', type: 'address' },
+        { indexed: true, name: 'to', type: 'address' },
+        { indexed: false, name: 'value', type: 'uint256' }
+      ]
+    },
+    args: { to: '0xbE4FeAE32210f682A41e1C41e3eaF4f8204cD29E' },
+    fromBlock: 16_078_500n,
+    toBlock: 16_235_800n
+  },
+  {
+    maxPageSizeInBlocks: 100_000n,
+    paginationDelayInMs: 500,
+    callback: (log) => {
+      // handle new event log found (indexing, caching, etc.)
+    }
+  }
+)
+```
+
+---
+
 ### Blocks
 
 Provides block tooling for fetching a block within (or close to) a given
@@ -164,7 +200,6 @@ const blockNumber = block.number
 
 ### More to Come...
 
-- Event Indexing and Queries
 - Web3 Social Integrations
 - NFT tooling
 

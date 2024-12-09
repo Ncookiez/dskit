@@ -13,7 +13,7 @@ describe('block', () => {
         const targetTimestamp = BigInt(Math.floor(Date.now() / 1000) - 86400)
         const targetRangeSeconds = 60
 
-        const block = await dskit.block.nearTimestamp({ targetTimestamp, targetRangeSeconds, verbose: true })
+        const block = await dskit.block.nearTimestamp({ targetTimestamp, targetRangeSeconds })
 
         assert(Math.abs(Number(block.timestamp - targetTimestamp)) <= BigInt(targetRangeSeconds))
       })

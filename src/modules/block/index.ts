@@ -1,3 +1,4 @@
+import { getBigIntAbsolute } from 'src/utils'
 import { PublicClient } from 'viem'
 
 export interface GetBlockNearTimestampArgs {
@@ -37,7 +38,7 @@ export const getBlockNearTimestamp = async (
   let estBlock = ub
   let iteration = 0
 
-  while (bigIntAbs(estBlock.timestamp - targetTimestampAsBigInt) > targetRangeSeconds) {
+  while (getBigIntAbsolute(estBlock.timestamp - targetTimestampAsBigInt) > targetRangeSeconds) {
     // Check if target timestamp is outside of range
     if (targetTimestampAsBigInt <= lb.timestamp) {
       return lb
@@ -50,7 +51,8 @@ export const getBlockNearTimestamp = async (
     const blockDiff = BigInt(ub.number - lb.number)
     if (blockDiff <= 1) {
       let closest = ub
-      if (bigIntAbs(lb.timestamp - targetTimestampAsBigInt) < bigIntAbs(ub.timestamp - targetTimestampAsBigInt)) closest = lb
+      if (getBigIntAbsolute(lb.timestamp - targetTimestampAsBigInt) < getBigIntAbsolute(ub.timestamp - targetTimestampAsBigInt))
+        closest = lb
       return closest
     }
 
@@ -81,9 +83,4 @@ export const getBlockNearTimestamp = async (
   }
 
   return estBlock
-}
-
-// Helper function for getting the absolute value of a bigint
-const bigIntAbs = (x: bigint) => {
-  return x < 0n ? x * -1n : x
 }
