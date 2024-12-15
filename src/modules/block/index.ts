@@ -47,7 +47,8 @@ export const getBlockNearTimestamp = async (
     blockAfterOrAtTimestamp(blockTimestampCache, targetTimestampAsBigInt)?.block ??
     (await fetchBlockInfo('latest', publicClient, blockTimestampCache))
   verbose && console.log('Fetched upper bound block: ', ub.number, ub.timestamp)
-  let estBlock = ub
+  let estBlock =
+    getBigIntAbsolute(ub.timestamp - targetTimestampAsBigInt) < getBigIntAbsolute(lb.timestamp - targetTimestampAsBigInt) ? ub : lb
   let iteration = 0
 
   while (getBigIntAbsolute(estBlock.timestamp - targetTimestampAsBigInt) > targetRangeSeconds) {
