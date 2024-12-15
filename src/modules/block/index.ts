@@ -122,7 +122,6 @@ const blockBeforeOrAtTimestamp = (cache: BlockInfo[], timestamp: bigint) => {
       break
     }
   }
-  console.log({ type: 'before', cache, timestamp, block, cacheIndex })
   return block ? { block, cacheIndex } : null
 }
 
@@ -137,6 +136,5 @@ const blockAfterOrAtTimestamp = (cache: BlockInfo[], timestamp: bigint) => {
       break
     }
   }
-  console.log({ type: 'after', cache, timestamp, block, cacheIndex })
   return block ? { block, cacheIndex } : null
 }
