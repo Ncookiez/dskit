@@ -7,6 +7,11 @@ export interface GetBlockNearTimestampArgs {
   verbose?: boolean
 }
 
+export interface BlockInfo {
+  number: bigint
+  timestamp: bigint
+}
+
 /**
  * Queries the provider for a block within the given time range of the
  * target timestamp.
@@ -19,11 +24,14 @@ export interface GetBlockNearTimestampArgs {
  *
  *  default: 60 seconds
  * @param verbose verbose logs for block fetching info
+ * @param blockTimestampCache optional cache for known block information
+ * in ascending order (if provided, it will be appended with new blocks)
  * @returns a Block object close to the target timestamp
  */
 export const getBlockNearTimestamp = async (
   publicClient: PublicClient,
-  { targetTimestamp, targetRangeSeconds = 60, verbose = false }: GetBlockNearTimestampArgs
+  { targetTimestamp, targetRangeSeconds = 60, verbose = false }: GetBlockNearTimestampArgs,
+  blockTimestampCache: BlockInfo[] = []
 ) => {
   const targetTimestampAsBigInt = typeof targetTimestamp === 'number' ? BigInt(targetTimestamp) : targetTimestamp
 
@@ -31,11 +39,16 @@ export const getBlockNearTimestamp = async (
   if (targetRangeSeconds < 1) throw new Error('targetRangeSeconds too small: must be at least 1 second')
 
   // Get starting block range
-  let lb = await publicClient.getBlock({ blockNumber: 0n })
+  let lb: BlockInfo =
+    blockBeforeOrAtTimestamp(blockTimestampCache, targetTimestampAsBigInt)?.block ??
+    (await fetchBlockInfo(0n, publicClient, blockTimestampCache))
   verbose && console.log('Fetched lower bound block: ', lb.number, lb.timestamp)
-  let ub = await publicClient.getBlock()
+  let ub: BlockInfo =
+    blockAfterOrAtTimestamp(blockTimestampCache, targetTimestampAsBigInt)?.block ??
+    (await fetchBlockInfo('latest', publicClient, blockTimestampCache))
   verbose && console.log('Fetched upper bound block: ', ub.number, ub.timestamp)
-  let estBlock = ub
+  let estBlock =
+    getBigIntAbsolute(ub.timestamp - targetTimestampAsBigInt) < getBigIntAbsolute(lb.timestamp - targetTimestampAsBigInt) ? ub : lb
   let iteration = 0
 
   while (getBigIntAbsolute(estBlock.timestamp - targetTimestampAsBigInt) > targetRangeSeconds) {
@@ -70,7 +83,7 @@ export const getBlockNearTimestamp = async (
       // Estimate based on block times
       estBlockNumber = (precision * (targetTimestampAsBigInt - lb.timestamp)) / avgSecBlock + lb.number
     }
-    estBlock = await publicClient.getBlock({ blockNumber: estBlockNumber })
+    estBlock = await fetchBlockInfo(estBlockNumber, publicClient, blockTimestampCache)
 
     // Squeeze the search range
     if (estBlock.timestamp > targetTimestampAsBigInt) {
@@ -83,4 +96,46 @@ export const getBlockNearTimestamp = async (
   }
 
   return estBlock
+}
+
+const fetchBlockInfo = async (blockNumber: bigint | 'latest', publicClient: PublicClient, cache: BlockInfo[]) => {
+  const res = await publicClient.getBlock({ blockNumber: blockNumber === 'latest' ? undefined : blockNumber })
+  const block = { number: res.number, timestamp: res.timestamp }
+  const cacheAfterOrAtBlock = blockAfterOrAtTimestamp(cache, block.timestamp)
+  if (cacheAfterOrAtBlock) {
+    if (cacheAfterOrAtBlock.block.number != block.number) {
+      cache.splice(cacheAfterOrAtBlock.cacheIndex, 0, block)
+    }
+  } else {
+    cache.push(block)
+  }
+  return block
+}
+
+const blockBeforeOrAtTimestamp = (cache: BlockInfo[], timestamp: bigint) => {
+  let block: BlockInfo | undefined
+  let cacheIndex = 0
+  for (let i = 0; i < cache.length; i++) {
+    if (cache[i].timestamp <= timestamp) {
+      block = cache[i]
+      cacheIndex = i
+    } else {
+      break
+    }
+  }
+  return block ? { block, cacheIndex } : null
+}
+
+const blockAfterOrAtTimestamp = (cache: BlockInfo[], timestamp: bigint) => {
+  let block: BlockInfo | undefined
+  let cacheIndex = 0
+  for (let i = cache.length - 1; i >= 0; i--) {
+    if (cache[i].timestamp >= timestamp) {
+      block = cache[i]
+      cacheIndex = i
+    } else {
+      break
+    }
+  }
+  return block ? { block, cacheIndex } : null
 }

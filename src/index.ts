@@ -48,7 +48,8 @@ export class DSKit {
 
   block = {
     nearTimestamp: async (args: blockModule.GetBlockNearTimestampArgs) =>
-      blockModule.getBlockNearTimestamp(await this.getPublicClient(), args)
+      blockModule.getBlockNearTimestamp(await this.getPublicClient(), args, this.block._blockTimestampCache),
+    _blockTimestampCache: [] as blockModule.BlockInfo[]
   }
 
   event = {
