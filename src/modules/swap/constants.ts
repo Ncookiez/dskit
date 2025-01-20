@@ -1,11 +1,12 @@
 import { Address } from 'viem'
-import { arbitrum, base, mainnet, optimism } from 'viem/chains'
+import { arbitrum, base, mainnet, optimism, polygon } from 'viem/chains'
 
 export const uniswapV2: { [chainId: number]: { routerAddress: Lowercase<Address> } } = {
   [arbitrum.id]: { routerAddress: '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' },
   [base.id]: { routerAddress: '0x4752ba5dbc23f44d87826276bf6fd6b1c372ad24' },
   [mainnet.id]: { routerAddress: '0x7a250d5630b4cf539739df2c5dacb4c659f2488d' },
-  [optimism.id]: { routerAddress: '0x4a7b5da61326a6379179b40d00f57e5bbdc962c2' }
+  [optimism.id]: { routerAddress: '0x4a7b5da61326a6379179b40d00f57e5bbdc962c2' },
+  [polygon.id]: { routerAddress: '0xedf6066a2b290c185783862c7f4776a2c8077ad1' }
 }
 
 export const uniswapV3: {
@@ -29,6 +30,10 @@ export const uniswapV3: {
   [optimism.id]: {
     quoterAddress: '0x61ffe014ba17989e743c5f6cb21bf9697530b21e',
     routerAddress: '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45'
+  },
+  [polygon.id]: {
+    quoterAddress: '0x61ffe014ba17989e743c5f6cb21bf9697530b21e',
+    routerAddress: '0x68b3465833fb72a70ecdf485e0e4c7bd8665fc45'
   }
 }
 
@@ -48,3 +53,7 @@ export const velodrome: {
     factoryAddresses: ['0xf1046053aa5682b4f9a81b5481394da16be5ff5a', '0xcc0bddb707055e04e497ab22a59c2af4391cd12f']
   }
 }
+
+// TODO: add balancer v2 support (gnosis)
+
+// TODO: add iziswap or syncswap support (scroll)
