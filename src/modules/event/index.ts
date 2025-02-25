@@ -3,7 +3,7 @@ import { AbiEvent, Address, GetLogsParameters, GetLogsReturnType, PublicClient }
 export interface QueryArgs<Event extends AbiEvent> {
   address: Address | Address[]
   event: Event
-  args: GetLogsParameters<Event>['args']
+  args?: GetLogsParameters<Event>['args']
   fromBlock: bigint
   toBlock: bigint | 'latest'
 }
@@ -28,8 +28,12 @@ export interface QueryConfig<Event extends AbiEvent> {
  * @param config Optional settings and/or callbacks
  * @returns
  */
-export const query = async <Event extends AbiEvent>(publicClient: PublicClient, args: QueryArgs<Event>, config?: QueryConfig<Event>) => {
-  const logs: GetLogsReturnType<Event, undefined, true> = []
+export const query = async <const Event extends AbiEvent>(
+  publicClient: PublicClient,
+  args: QueryArgs<Event>,
+  config?: QueryConfig<Event>
+) => {
+  const logs: GetLogsReturnType<Event, Event extends AbiEvent ? [Event] : undefined, true> = []
 
   const maxBlock = args.toBlock === 'latest' ? await publicClient.getBlockNumber() : args.toBlock
 
