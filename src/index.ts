@@ -55,7 +55,7 @@ export class DSKit {
   }
 
   event = {
-    query: async <Event extends AbiEvent>(args: eventModule.QueryArgs<Event>, config?: eventModule.QueryConfig<Event>) =>
+    query: async <const Event extends AbiEvent>(args: eventModule.QueryArgs<Event>, config?: eventModule.QueryConfig<Event>) =>
       eventModule.query(await this.getPublicClient(), args, { ...config, silent: config?.silent ?? this.silent })
   }
 
