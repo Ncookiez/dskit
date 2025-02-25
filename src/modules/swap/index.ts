@@ -16,6 +16,7 @@ export interface SwapResult {
 
 export interface SwapRouteConfig {
   exchanges?: { includeOnly?: ('uniswap_v2' | 'uniswap_v3' | 'velodrome')[]; includeRoutesThroughTokens?: Address[] }
+  silent?: boolean
 }
 
 export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs, config?: SwapRouteConfig): Promise<SwapResult> => {
@@ -29,7 +30,8 @@ export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs, c
   const uniswapV3SwapRoute =
     !config?.exchanges?.includeOnly?.length || config.exchanges.includeOnly.includes('uniswap_v3')
       ? await getUniswapV3SwapRoute(publicClient, chainId, args, {
-          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens
+          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens,
+          silent: config?.silent
         })
       : { quote: 0n }
 
@@ -41,7 +43,8 @@ export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs, c
   const uniswapV2SwapRoute =
     !config?.exchanges?.includeOnly?.length || config.exchanges.includeOnly.includes('uniswap_v2')
       ? await getUniswapV2SwapRoute(publicClient, chainId, args, {
-          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens
+          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens,
+          silent: config?.silent
         })
       : { quote: 0n }
 
@@ -53,7 +56,8 @@ export const getSwapRoute = async (publicClient: PublicClient, args: SwapArgs, c
   const velodromeSwapRoute =
     !config?.exchanges?.includeOnly?.length || config.exchanges.includeOnly.includes('velodrome')
       ? await getVelodromeSwapRoute(publicClient, chainId, args, {
-          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens
+          includeRoutesThroughTokens: config?.exchanges?.includeRoutesThroughTokens,
+          silent: config?.silent
         })
       : { quote: 0n }
 

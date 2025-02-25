@@ -7,7 +7,7 @@ import { AbiEvent, createPublicClient, http, PublicClient } from 'viem'
 import * as chains from 'viem/chains'
 
 // TODO: support ethers or generic public clients as well
-export type DSKitArgs = { rpcUrl?: string; viemPublicClient?: PublicClient }
+export type DSKitArgs = { rpcUrl?: string; viemPublicClient?: PublicClient; silent?: boolean }
 
 /**
  * DSKit Class
@@ -15,6 +15,7 @@ export type DSKitArgs = { rpcUrl?: string; viemPublicClient?: PublicClient }
 export class DSKit {
   publicClient: PublicClient | undefined
   rpcUrl: string | undefined
+  silent: boolean | undefined
 
   constructor(args: DSKitArgs) {
     // TODO: simple validation
@@ -25,6 +26,7 @@ export class DSKit {
     } else {
       throw new Error('Please include either an "rpcUrl" or "viemPublicClient" when initializing DSKit.')
     }
+    this.silent = args.silent
   }
 
   async getPublicClient() {
@@ -54,22 +56,22 @@ export class DSKit {
 
   event = {
     query: async <Event extends AbiEvent>(args: eventModule.QueryArgs<Event>, config?: eventModule.QueryConfig<Event>) =>
-      eventModule.query(await this.getPublicClient(), args, config)
+      eventModule.query(await this.getPublicClient(), args, { ...config, silent: config?.silent ?? this.silent })
   }
 
   price = {
     ofToken: async (args: priceModule.GetTokenPriceArgs, swapRouteConfig?: swapModule.SwapRouteConfig) =>
-      priceModule.getTokenPrice(await this.getPublicClient(), args, swapRouteConfig)
+      priceModule.getTokenPrice(await this.getPublicClient(), args, { ...swapRouteConfig, silent: swapRouteConfig?.silent ?? this.silent })
   }
 
   swap = {
     route: async (args: swapModule.SwapArgs, config?: swapModule.SwapRouteConfig) =>
-      swapModule.getSwapRoute(await this.getPublicClient(), args, config)
+      swapModule.getSwapRoute(await this.getPublicClient(), args, { ...config, silent: config?.silent ?? this.silent })
   }
 
   zap = {
     tx: async (args: zapModule.ZapTxArgs, swapRouteConfig?: swapModule.SwapRouteConfig) =>
-      zapModule.getZapTx(await this.getPublicClient(), args, swapRouteConfig)
+      zapModule.getZapTx(await this.getPublicClient(), args, { ...swapRouteConfig, silent: swapRouteConfig?.silent ?? this.silent })
   }
 }
 

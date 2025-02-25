@@ -12,12 +12,12 @@ export const getSwapRoute = async (
   publicClient: PublicClient,
   chainId: number,
   args: SwapArgs,
-  config?: { includeRoutesThroughTokens?: Address[] }
+  config?: { includeRoutesThroughTokens?: Address[]; silent?: boolean }
 ): Promise<SwapResult> => {
   const { tokenIn, tokenOut, executionOptions } = args
 
   if (!velodrome[chainId]) {
-    console.warn(`Velodrome routes are not currently supported on network with chain ID ${chainId}`)
+    !config?.silent && console.warn(`Velodrome routes are not currently supported on network with chain ID ${chainId}`)
     return { quote: 0n }
   }
 

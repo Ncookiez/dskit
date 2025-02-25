@@ -13,6 +13,7 @@ export interface QueryConfig<Event extends AbiEvent> {
   maxPageSizeInBlocks?: bigint
   paginationDelayInMs?: number
   maxRetries?: number
+  silent?: boolean
 }
 
 /**
@@ -70,9 +71,10 @@ export const query = async <Event extends AbiEvent>(publicClient: PublicClient, 
           }
 
           if (retryCount < maxRetries - 1) {
-            console.warn(
-              `Event query ran into rate limits (${args.event.name}) - retrying with updated delay; ${oldPaginationDelayInMs}ms -> ${paginationDelayInMs}ms`
-            )
+            !config?.silent &&
+              console.warn(
+                `Event query ran into rate limits (${args.event.name}) - retrying with updated delay; ${oldPaginationDelayInMs}ms -> ${paginationDelayInMs}ms`
+              )
           }
         } else {
           const blockRange = toBlock - fromBlock
@@ -93,11 +95,12 @@ export const query = async <Event extends AbiEvent>(publicClient: PublicClient, 
             toBlock = fromBlock + maxPageSizeInBlocks - 1n
 
             if (retryCount < maxRetries - 1) {
-              console.warn(
-                `Event query failed (${
-                  args.event.name
-                }) - retrying with updated max block range; ${oldMaxPageSizeInBlocks.toLocaleString()} -> ${maxPageSizeInBlocks.toLocaleString()}`
-              )
+              !config?.silent &&
+                console.warn(
+                  `Event query failed (${
+                    args.event.name
+                  }) - retrying with updated max block range; ${oldMaxPageSizeInBlocks.toLocaleString()} -> ${maxPageSizeInBlocks.toLocaleString()}`
+                )
             }
           }
         }
