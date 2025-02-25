@@ -1,7 +1,7 @@
 import { AbiEvent, Address, GetLogsParameters, GetLogsReturnType, PublicClient } from 'viem'
 
 export interface QueryArgs<Event extends AbiEvent> {
-  address: Address
+  address: Address | Address[]
   event: Event
   args: GetLogsParameters<Event>['args']
   fromBlock: bigint
@@ -20,7 +20,7 @@ export interface QueryConfig<Event extends AbiEvent> {
  * Queries a specific event log onchain, handling common errors (rate limiting, block pagination, etc.)
  * @param publicClient The public client to use for fetching onchain data
  * @param args The `viem` parameters for querying an event log
- * - `address` - the address that emitted the event log
+ * - `address` - the address(es) that emitted the event log
  * - `event` - the event ABI
  * - `args` - any indexed arguments to filter by
  * - `fromBlock` - the minimum block to search from
